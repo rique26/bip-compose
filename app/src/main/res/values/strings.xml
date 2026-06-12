@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Bip</string>
+
+    <!-- Erros de Autenticação -->
+    <string name="error_invalid_email">Formato de e-mail inválido. Verifique se digitou corretamente.</string>
+    <string name="error_empty_email">Por favor, insira seu endereço de e-mail.</string>
+    <string name="error_empty_password">A senha é obrigatória para acessar sua conta.</string>
+    <string name="error_invalid_credentials">E-mail ou senha incorretos. Tente novamente.</string>
+    <string name="error_user_not_found">Não encontramos uma conta com este e-mail.</string>
+    <string name="error_wrong_password">Senha incorreta. Verifique os dados ou use "Esqueci minha senha".</string>
+    <string name="error_network">Sem conexão com a internet. Verifique seu sinal e tente novamente.</string>
+    <string name="error_email_exists">Este e-mail já está cadastrado. Tente fazer login.</string>
+    <string name="error_weak_password">Sua senha precisa ter pelo menos 6 caracteres.</string>
+    <string name="error_user_disabled">Esta conta foi suspensa. Entre em contato com o suporte.</string>
+    <string name="error_too_many_requests">Muitas tentativas sem sucesso. Aguarde alguns minutos antes de tentar de novo.</string>
+    <string name="error_unknown">Algo deu errado do nosso lado. Estamos trabalhando para resolver!</string>
+</resources>
