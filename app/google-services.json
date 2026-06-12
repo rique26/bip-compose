@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "855282830216",
+    "project_id": "bip-app-3fee0",
+    "storage_bucket": "bip-app-3fee0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:855282830216:android:b0c55c215276c401ad083d",
+        "android_client_info": {
+          "package_name": "com.ebody.bip"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCd_rvFt-yL6JukXWlmA2x9frodOLZEC6g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
