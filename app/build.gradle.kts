@@ -89,6 +89,11 @@ dependencies {
     implementation(libs.retrofit.gson)
     implementation(libs.okhttp.logging)
 
+    // Room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+
     // Desugaring
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 

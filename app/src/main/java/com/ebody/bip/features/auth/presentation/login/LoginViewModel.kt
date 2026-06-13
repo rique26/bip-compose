@@ -47,24 +47,26 @@ class LoginViewModel @Inject constructor(
 
     private fun login() {
         viewModelScope.launch {
-            _uiState.update {
-                it.copy(isLoading = true)
-            }
+            _effect.emit(LoginEffect.NavigateToHome)
 
-            val request = LoginRequest(
-                email = _uiState.value.email,
-                password = _uiState.value.password
-            )
-
-            loginUseCase(request)
-                .onSuccess {
-                    _uiState.update { it.copy(isLoading = false) }
-                    _effect.emit(LoginEffect.NavigateToHome)
-                }
-                .onError { authError ->
-                    _uiState.update { it.copy(isLoading = false) }
-                    _effect.emit(LoginEffect.ShowError(authError))
-                }
+//            _uiState.update {
+//                it.copy(isLoading = true)
+//            }
+//
+//            val request = LoginRequest(
+//                email = _uiState.value.email,
+//                password = _uiState.value.password
+//            )
+//
+//            loginUseCase(request)
+//                .onSuccess {
+//                    _uiState.update { it.copy(isLoading = false) }
+//                    _effect.emit(LoginEffect.NavigateToHome)
+//                }
+//                .onError { authError ->
+//                    _uiState.update { it.copy(isLoading = false) }
+//                    _effect.emit(LoginEffect.ShowError(authError))
+//                }
         }
     }
 }
