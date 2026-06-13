@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.ebody.bip.features.schedule.domain.model.Medication
 
 @Composable
 fun MedicationListScreen(
@@ -56,13 +57,13 @@ fun MedicationListScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val medications by viewModel.medications.collectAsState()
-    var selectedIds by remember { mutableStateOf(setOf<String>()) }
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    var selectedIds by remember { mutableStateOf(setOf<Long>()) }
 
     LaunchedEffect(Unit) {
         viewModel.loadMedications()
     }
 
-    // Usamos Box para permitir a sobreposição (Overlay)
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -93,13 +94,19 @@ fun MedicationListScreen(
                     text = "Sair",
                     color = Color.Red,
                     modifier = Modifier
-                        .clickable { viewModel.logout() }
+                        .clickable {}
                         .padding(8.dp),
                     fontWeight = FontWeight.Medium
                 )
             }
 
-            SearchBar()
+            SearchBar(
+                query = searchQuery,
+                onQueryChange = { newQuery ->
+                    viewModel.onSearchQueryChanged(newQuery)
+                }
+            )
+
             Spacer(modifier = Modifier.height(16.dp))
 
             when (state) {
@@ -109,21 +116,25 @@ fun MedicationListScreen(
                     }
                 }
                 is MedicationListUiState.Success -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        // Adicionamos um contentPadding inferior para que o último item
-                        // não fique escondido atrás dos botões fixos
-                        contentPadding = PaddingValues(bottom = 120.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        items(medications) { medication ->
-                            MedicationRow(
-                                medication = medication,
-                                isSelected = selectedIds.contains(medication.id),
-                                onCheckedChange = { isSelected ->
-                                    selectedIds = if (isSelected) selectedIds + medication.id else selectedIds - medication.id
-                                }
-                            )
+                    if (medications.isEmpty()) {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("Nenhum medicamento encontrado", color = Color.Gray)
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(bottom = 120.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            items(medications) { medication ->
+                                MedicationRow(
+                                    medication = medication,
+                                    isSelected = selectedIds.contains(medication.id),
+                                    onCheckedChange = { isSelected ->
+                                        selectedIds = if (isSelected) selectedIds + medication.id else selectedIds - medication.id
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -141,7 +152,6 @@ fun MedicationListScreen(
         ) {
             Button(
                 onClick = {},
-//                onClick = navController.graph.,
                 modifier = Modifier.width(140.dp),
                 shape = RoundedCornerShape(4.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64B5F6))
@@ -163,10 +173,13 @@ fun MedicationListScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SearchBar() {
+private fun SearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit
+) {
     OutlinedTextField(
-        value = "",
-        onValueChange = {},
+        value = query,
+        onValueChange = onQueryChange,
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 16.dp)
@@ -200,7 +213,7 @@ private fun MedicationRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            imageVector = Icons.Outlined.Medication, // Substitui o ícone de pílula do print
+            imageVector = Icons.Outlined.Medication,
             contentDescription = null,
             tint = Color(0xFF90CAF9),
             modifier = Modifier.size(24.dp)
@@ -228,14 +241,6 @@ private fun MedicationRow(
 @Composable
 fun MedicationListPreview() {
     val navController = rememberNavController()
-    val mockMedications = listOf(
-        Medication(id = "1", name = "Addera D3"),
-        Medication(id = "2", name = "Stabil"),
-        Medication(id = "3", name = "Pred-Fort"),
-        Medication(id = "4", name = "Razapina"),
-        Medication(id = "5", name = "Pericor")
-    )
-
     MaterialTheme {
         // Mock simples para o preview
         MedicationListScreen(navController = navController)
