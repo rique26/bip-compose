@@ -1,18 +1,46 @@
 package com.ebody.bip.core.presentation.navigation
 
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
-import com.ebody.bip.features.schedule.presentation.medication_list.MedicationListScreen
+import androidx.navigation.toRoute
+import com.ebody.bip.features.schedule.presentation.home_dashboard.HomeDashboardScreen
+import com.ebody.bip.features.schedule.presentation.medication_schedule.MedicationScheduleScreen
+import com.ebody.bip.features.schedule.presentation.medication_selection.MedicationSelectionScreen
 
 fun NavGraphBuilder.scheduleGraph(navController: NavController) {
-    navigation<ScheduleGraph>(startDestination = MedicationList) {
+    navigation<ScheduleGraph>(startDestination = Home) {
 
-        composable<MedicationList> {
-            MedicationListScreen(navController, hiltViewModel())
+        composable<Home> {
+            HomeDashboardScreen(
+                onNavigateToMedicationSelection = {
+                    navController.navigate(MedicationSelection)
+                }
+            )
         }
+
+        composable<MedicationSelection> {
+            MedicationSelectionScreen(
+                onNavigateToSchedule = { selectedIds ->
+                    navController.navigate(MedicationSchedule(medicationIds = selectedIds))
+                }
+            )
+        }
+
+        composable<MedicationSchedule> { backStackEntry ->
+            val args = backStackEntry.toRoute<MedicationSchedule>()
+            MedicationScheduleScreen(
+                medicationIds = args.medicationIds,
+                onBack = { navController.popBackStack() },
+                onFinish = {
+                    navController.navigate(Home) {
+                        popUpTo(ScheduleGraph) { inclusive = true }
+                    }
+                }
+            )
+        }
+
 
     }
 }

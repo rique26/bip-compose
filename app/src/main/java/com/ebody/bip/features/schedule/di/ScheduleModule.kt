@@ -1,9 +1,11 @@
 package com.ebody.bip.features.schedule.di
 
-import com.ebody.bip.core.data.local.database.BipDatabase
 import com.ebody.bip.features.schedule.data.local.MedicationDao
 import com.ebody.bip.features.schedule.data.repository.MedicationRepositoryImpl
-import com.ebody.bip.features.schedule.domain.MedicationRepository
+import com.ebody.bip.features.schedule.data.repository.ReminderRepositoryImpl
+import com.ebody.bip.features.schedule.domain.repository.MedicationRepository
+import com.ebody.bip.features.schedule.domain.repository.ReminderRepository
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -12,14 +14,17 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object ScheduleModule {
+abstract class ScheduleModule {
 
-
-    @Provides
+    @Binds
     @Singleton
-    fun provideMedicationRepository(
-        medicationDao: MedicationDao
-    ): MedicationRepository {
-        return MedicationRepositoryImpl(medicationDao)
-    }
+    abstract fun provideMedicationRepository(
+        medicationRepositoryImpl: MedicationRepositoryImpl
+    ): MedicationRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindReminderRepository(
+        reminderRepositoryImpl: ReminderRepositoryImpl
+    ): ReminderRepository
 }

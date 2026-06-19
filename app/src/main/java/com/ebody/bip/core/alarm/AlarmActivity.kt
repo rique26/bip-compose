@@ -1,8 +1,10 @@
 package com.ebody.bip.core.alarm
 
+import android.annotation.SuppressLint
 import android.content.*
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
@@ -22,23 +24,29 @@ class AlarmActivity : ComponentActivity() {
 
     companion object {
         const val ACTION_DISMISS = "com.ebody.bip.ACTION_DISMISS_ALARM"
+        private const val TAG = "AlarmDebug"
     }
 
     private val dismissReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
+            Log.d(TAG, "Dismiss broadcast received in AlarmActivity. Finishing activity.")
             finish()
         }
     }
 
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d(TAG, "onCreate called.")
 
         // Acende tela e mostra sobre lockscreen
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            Log.d(TAG, "SDK >= O_MR1. Setting setShowWhenLocked and setTurnScreenOn.")
             setShowWhenLocked(true)
             setTurnScreenOn(true)
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         } else {
+            Log.d(TAG, "SDK < O_MR1. Adding deprecated window flags.")
             @Suppress("DEPRECATION")
             window.addFlags(
                 WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
@@ -50,19 +58,23 @@ class AlarmActivity : ComponentActivity() {
         // Bloqueia o botão voltar — usuário só pode dispensar
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
+                Log.d(TAG, "Back button pressed but intercepted (disabled).")
                 // não faz nada — força o usuário a clicar em Dispensar
             }
         })
 
         // Registra receiver para fechar quando dispensar pela notificação
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Log.d(TAG, "Registering dismiss receiver with RECEIVER_NOT_EXPORTED.")
             registerReceiver(dismissReceiver, IntentFilter(ACTION_DISMISS), RECEIVER_NOT_EXPORTED)
         } else {
+            Log.d(TAG, "Registering dismiss receiver standard.")
             registerReceiver(dismissReceiver, IntentFilter(ACTION_DISMISS))
         }
 
         val label  = intent.getStringExtra("ALARM_LABEL") ?: "Medicamento"
         val dosage = intent.getStringExtra("ALARM_DOSAGE") ?: ""
+        Log.d(TAG, "Alarm data retrieved - Label: $label, Dosage: $dosage")
 
         setContent {
             AppTheme {
@@ -70,6 +82,7 @@ class AlarmActivity : ComponentActivity() {
                     label = label,
                     dosage = dosage,
                     onDismiss = {
+                        Log.d(TAG, "Alarm dismissed by UI button. Stopping AlarmService and finishing activity.")
                         stopService(Intent(this, AlarmService::class.java))
                         finish()
                     }
@@ -79,6 +92,7 @@ class AlarmActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        Log.d(TAG, "onDestroy called. Unregistering dismiss receiver.")
         runCatching { unregisterReceiver(dismissReceiver) }
         super.onDestroy()
     }
