@@ -28,6 +28,7 @@ sealed interface NavRoute
 @Serializable object Home : NavRoute
 
 // Schedule (Medicamentos)
-@Serializable object MedicationList : NavRoute
-@Serializable object MedicationSearch : NavRoute
-@Serializable object AddMedication : NavRoute
+@Serializable object MedicationSelection : NavRoute
+@Serializable data class MedicationSchedule(val medicationIds: List<Long>)
+//@Serializable object MedicationSearch : NavRoute
+//@Serializable object AddMedication : NavRoute
