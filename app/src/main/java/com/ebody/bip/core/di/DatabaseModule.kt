@@ -3,12 +3,15 @@ package com.ebody.bip.core.di
 import android.content.Context
 import androidx.room.Room
 import com.ebody.bip.core.data.local.database.BipDatabase
+import com.ebody.bip.core.data.local.database.MedicationDatabase
 import com.ebody.bip.features.schedule.data.local.MedicationDao
+import com.ebody.bip.features.schedule.data.local.ReminderDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -17,16 +20,19 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideBipDatabase(
-        @ApplicationContext context: Context,
-    ): BipDatabase {
-        return Room.databaseBuilder(
-            context,
-            BipDatabase::class.java,
-            "bip_database"
-        )
-            .createFromAsset("medications.db")
+    @Named("BipDb")
+    fun provideBipDatabase(@ApplicationContext context: Context, ): BipDatabase {
+        return Room.databaseBuilder(context, BipDatabase::class.java, "bip.db")
             .fallbackToDestructiveMigration()
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    @Named("MedicationDb")
+    fun provideMedicationDatabase(@ApplicationContext context: Context): MedicationDatabase {
+        return Room.databaseBuilder(context, MedicationDatabase::class.java, "medications.db")
+            .createFromAsset("medications.db")
             .build()
     }
 
@@ -38,7 +44,13 @@ object DatabaseModule {
 //
     @Provides
     @Singleton
-    fun provideMedicationDao(database: BipDatabase): MedicationDao {
+    fun provideMedicationDao(@Named("MedicationDb") database: MedicationDatabase): MedicationDao {
         return database.medicationDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideReminderDao(@Named("BipDb") database: BipDatabase): ReminderDao {
+        return database.reminderDao()
     }
 }

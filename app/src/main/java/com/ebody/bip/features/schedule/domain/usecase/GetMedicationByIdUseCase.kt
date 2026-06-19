@@ -4,10 +4,10 @@ import com.ebody.bip.features.schedule.domain.model.Medication
 import com.ebody.bip.features.schedule.domain.repository.MedicationRepository
 import javax.inject.Inject
 
-class GetMedicationsUseCase @Inject constructor(
+class GetMedicationByIdUseCase @Inject constructor(
     private val repository: MedicationRepository
 ) {
-    suspend operator fun invoke(query: String = ""): List<Medication> {
-        return repository.getMedications(query)
+    suspend operator fun invoke(id: Long): Medication? {
+        return repository.getMedicationById(id)
     }
 }

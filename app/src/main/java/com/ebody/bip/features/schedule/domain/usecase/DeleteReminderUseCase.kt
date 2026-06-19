@@ -5,12 +5,12 @@ import com.ebody.bip.features.schedule.domain.model.MedicationReminder
 import com.ebody.bip.features.schedule.domain.repository.ReminderRepository
 import javax.inject.Inject
 
-class SaveReminderUseCase @Inject constructor(
+class DeleteReminderUseCase @Inject constructor(
     private val repository: ReminderRepository,
     private val alarmScheduler: AlarmScheduler
 ) {
     suspend operator fun invoke(reminder: MedicationReminder) {
-        repository.saveReminder(reminder)
-        alarmScheduler.schedule(reminder)
+        alarmScheduler.cancel(reminder)
+        repository.deleteReminder(reminder)
     }
 }
