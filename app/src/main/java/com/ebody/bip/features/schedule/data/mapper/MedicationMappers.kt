@@ -1,10 +1,11 @@
 package com.ebody.bip.features.schedule.data.mapper
 
-import com.ebody.bip.features.schedule.data.local.MedicationEntity
-import com.ebody.bip.features.schedule.data.local.ReminderEntity
+import com.ebody.bip.features.schedule.data.model.MedicationEntity
+import com.ebody.bip.features.schedule.data.model.ReminderEntity
 import com.ebody.bip.features.schedule.domain.model.Medication
 import com.ebody.bip.features.schedule.domain.model.MedicationReminder
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 
@@ -34,7 +35,7 @@ fun MedicationReminder.toEntity(): ReminderEntity {
         id = id,
         medicationId = medication.id,
         dosage = dosage,
-        time = time.atDate(java.time.LocalDate.now())
+        time = time.atDate(LocalDate.now())
             .atZone(ZoneId.systemDefault())
             .toInstant()
             .toEpochMilli(),

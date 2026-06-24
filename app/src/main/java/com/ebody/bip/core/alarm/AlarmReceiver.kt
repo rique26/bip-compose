@@ -9,12 +9,11 @@ import android.os.Build
 import android.util.Log
 import androidx.core.content.ContextCompat
 import com.ebody.bip.features.schedule.data.local.ReminderDao
-import com.ebody.bip.features.schedule.data.local.ReminderEntity
+import com.ebody.bip.features.schedule.data.model.ReminderEntity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.forEach
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import javax.inject.Inject

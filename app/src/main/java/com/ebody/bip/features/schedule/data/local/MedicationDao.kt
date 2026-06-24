@@ -4,10 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Transaction
-import com.ebody.bip.features.schedule.domain.model.Medication
-import com.ebody.bip.features.schedule.domain.model.MedicationReminder
-import kotlinx.coroutines.flow.Flow
+import com.ebody.bip.features.schedule.data.model.MedicationEntity
 
 @Dao
 interface MedicationDao {

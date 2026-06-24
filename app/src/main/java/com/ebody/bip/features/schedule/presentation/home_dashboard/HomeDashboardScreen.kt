@@ -14,6 +14,8 @@ import java.time.LocalTime
 @Composable
 fun HomeDashboardScreen(
     onNavigateToMedicationSelection: () -> Unit,
+    onNavigateToEmergency: () -> Unit,
+    onNavigateToMood: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -21,6 +23,8 @@ fun HomeDashboardScreen(
     HomeDashboardContent(
         uiState = uiState,
         onNavigateToMedicationSelection = onNavigateToMedicationSelection,
+        onNavigateToEmergency = onNavigateToEmergency,
+        onNavigateToMood = onNavigateToMood,
         onDeleteReminder = { reminder ->
             viewModel.onEvent(HomeDashboardEvent.DeleteReminder(reminder))
         }
@@ -62,6 +66,8 @@ fun PreviewHomeDashboard() {
         HomeDashboardContent(
             uiState = HomeDashboardUiState(reminders = mockReminders),
             onNavigateToMedicationSelection = {},
+            onNavigateToEmergency = {},
+            onNavigateToMood = {},
             onDeleteReminder = {}
         )
     }
