@@ -1,4 +1,4 @@
-package com.ebody.bip.features.schedule.data.local
+package com.ebody.bip.features.schedule.data.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

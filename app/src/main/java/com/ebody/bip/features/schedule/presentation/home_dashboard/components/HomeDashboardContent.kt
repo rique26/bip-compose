@@ -33,6 +33,8 @@ import com.ebody.bip.features.schedule.presentation.home_dashboard.HomeDashboard
 fun HomeDashboardContent(
     uiState: HomeDashboardUiState,
     onNavigateToMedicationSelection: () -> Unit,
+    onNavigateToEmergency: () -> Unit,
+    onNavigateToMood: () -> Unit,
     onDeleteReminder: (MedicationReminder) -> Unit
 ) {
     val systemBarPaddings = WindowInsets.systemBars.asPaddingValues()
@@ -90,7 +92,9 @@ fun HomeDashboardContent(
                         HeaderContent(modifier = Modifier.padding(top = 32.dp))
                         ActionButtonsRow(
                             modifier = Modifier.padding(vertical = 16.dp),
-                            onNavigateToMedicationSelection = onNavigateToMedicationSelection
+                            onNavigateToMedicationSelection = onNavigateToMedicationSelection,
+                            onNavigateToEmergency = onNavigateToEmergency,
+                            onNavigateToMood = onNavigateToMood
                         )
                     }
                 }

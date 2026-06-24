@@ -3,11 +3,8 @@ package com.ebody.bip.features.schedule.presentation.medication_selection
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ebody.bip.features.schedule.data.local.ReminderEntity
 import com.ebody.bip.features.schedule.domain.model.Medication
-import com.ebody.bip.features.schedule.domain.model.MedicationReminder
 import com.ebody.bip.features.schedule.domain.usecase.GetMedicationsUseCase
-import com.ebody.bip.features.schedule.domain.usecase.SaveReminderUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

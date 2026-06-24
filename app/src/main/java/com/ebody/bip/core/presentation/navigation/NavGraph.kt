@@ -17,7 +17,8 @@ fun NavGraph(
     ) {
         authGraph(navController)
         scheduleGraph(navController)
-//        emergencyGraph(navController)
+        emergencyGraph(navController)
+        wellbeingGraph(navController)
     }
 
 }
