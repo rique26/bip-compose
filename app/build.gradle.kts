@@ -70,7 +70,8 @@ dependencies {
     // Hilt Core e Compilador
     implementation(libs.dagger.hilt.android)
     implementation(libs.androidx.work.runtime.ktx)
-    implementation(libs.androidx.hilt.work)      // contém HiltWorkerFactory
+    implementation(libs.androidx.hilt.work)
+    implementation(libs.play.services.location)      // contém HiltWorkerFactory
     ksp(libs.androidx.hilt.compiler)
     ksp(libs.dagger.hilt.compiler)
 

@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.ebody.bip.features.schedule.data.model.ReminderEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao

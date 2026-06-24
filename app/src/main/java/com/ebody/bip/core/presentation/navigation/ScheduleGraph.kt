@@ -16,6 +16,12 @@ fun NavGraphBuilder.scheduleGraph(navController: NavController) {
             HomeDashboardScreen(
                 onNavigateToMedicationSelection = {
                     navController.navigate(MedicationSelection)
+                },
+                onNavigateToEmergency = {
+                    navController.navigate(Emergency)
+                },
+                onNavigateToMood = {
+                    navController.navigate(MoodRoute)
                 }
             )
         }
@@ -40,7 +46,5 @@ fun NavGraphBuilder.scheduleGraph(navController: NavController) {
                 }
             )
         }
-
-
     }
 }

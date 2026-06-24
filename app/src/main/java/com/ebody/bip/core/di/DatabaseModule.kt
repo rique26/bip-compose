@@ -4,8 +4,10 @@ import android.content.Context
 import androidx.room.Room
 import com.ebody.bip.core.data.local.database.BipDatabase
 import com.ebody.bip.core.data.local.database.MedicationDatabase
+import com.ebody.bip.features.emergency.data.local.ContactDao
 import com.ebody.bip.features.schedule.data.local.MedicationDao
 import com.ebody.bip.features.schedule.data.local.ReminderDao
+import com.ebody.bip.features.wellbeing.data.datasource.local.MoodDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -52,5 +54,17 @@ object DatabaseModule {
     @Singleton
     fun provideReminderDao(@Named("BipDb") database: BipDatabase): ReminderDao {
         return database.reminderDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideContactDao(@Named("BipDb") database: BipDatabase): ContactDao {
+        return database.contactDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideMoodDao(@Named("BipDb") database: BipDatabase): MoodDao {
+        return database.moodDao()
     }
 }

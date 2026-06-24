@@ -15,7 +15,12 @@ import androidx.compose.ui.unit.dp
 
 
 @Composable
-fun ActionButtonsRow(modifier: Modifier = Modifier, onNavigateToMedicationSelection: () -> Unit) {
+fun ActionButtonsRow(
+    modifier: Modifier = Modifier,
+    onNavigateToMedicationSelection: () -> Unit,
+    onNavigateToEmergency: () -> Unit,
+    onNavigateToMood: () -> Unit
+) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -35,7 +40,8 @@ fun ActionButtonsRow(modifier: Modifier = Modifier, onNavigateToMedicationSelect
         ActionCard(
             "Controle",
             Icons.Default.Timeline,
-            Modifier.weight(1f)
+            Modifier.weight(1f),
+            onNavigateToMood
         )
 
         ActionCard(
@@ -43,7 +49,8 @@ fun ActionButtonsRow(modifier: Modifier = Modifier, onNavigateToMedicationSelect
             Icons.Default.Warning,
             Modifier
                 .weight(1f)
-                .padding(bottom = 36.dp)
+                .padding(bottom = 36.dp),
+            onClick = onNavigateToEmergency
         )
     }
 }
