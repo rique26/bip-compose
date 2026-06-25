@@ -1,4 +1,4 @@
-package com.ebody.bip.features.auth.presentation.register
+package com.ebody.bip.features.auth.presentation.register.components
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
@@ -101,7 +101,7 @@ fun RegisterHeader(
             Spacer(modifier = Modifier.height(16.dp))
 
             Image(
-                painter = painterResource(R.drawable.img_bip_mascote02),
+                painter = painterResource(R.drawable.mascot_bip_happy),
                 contentDescription = null,
                 modifier = Modifier.size(160.dp),
                 contentScale = ContentScale.Fit

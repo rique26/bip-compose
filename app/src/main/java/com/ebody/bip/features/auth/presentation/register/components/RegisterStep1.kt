@@ -1,4 +1,4 @@
-package com.ebody.bip.features.auth.presentation.register
+package com.ebody.bip.features.auth.presentation.register.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

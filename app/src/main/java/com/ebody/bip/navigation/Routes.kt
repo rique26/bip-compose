@@ -22,11 +22,7 @@ sealed interface ScreenRoute : NavigationRoute
 // Auth
 @Serializable object Login : ScreenRoute
 @Serializable object Register : ScreenRoute
-@Serializable object RegisterStep1 : ScreenRoute
-@Serializable object RegisterStep2 : ScreenRoute
-@Serializable object RegisterStep3 : ScreenRoute
-@Serializable object ResetPassword : ScreenRoute
-
+@Serializable object RegistrationSuccess : ScreenRoute
 // Home
 @Serializable object Home : ScreenRoute
 

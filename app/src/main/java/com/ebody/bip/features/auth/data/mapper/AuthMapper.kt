@@ -18,18 +18,8 @@ fun FirebaseUser.toDomainModel(): AuthUser {
         photoUrl = this.photoUrl?.toString(),
         phoneNumber = this.phoneNumber,
         isEmailVerified = this.isEmailVerified,
-        createdAt = this.metadata?.creationTimestamp?.let {
-            LocalDateTime.ofInstant(
-                Instant.ofEpochMilli(it),
-                ZoneId.systemDefault()
-            )
-        } ?: LocalDateTime.now(),
-        lastLoginAt = this.metadata?.lastSignInTimestamp?.let {
-            LocalDateTime.ofInstant(
-                Instant.ofEpochMilli(it),
-                ZoneId.systemDefault()
-            )
-        },
+        createdAt = this.metadata?.creationTimestamp ?: System.currentTimeMillis(),
+        lastLoginAt = this.metadata?.lastSignInTimestamp,
         metadata = UserMetadata(
             creationTimestamp = this.metadata?.creationTimestamp ?: 0,
             lastSignInTimestamp = this.metadata?.lastSignInTimestamp ?: 0

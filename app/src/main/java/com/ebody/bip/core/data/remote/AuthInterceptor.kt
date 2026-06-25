@@ -1,6 +1,7 @@
 package com.ebody.bip.core.data.remote
 
-import com.ebody.bip.features.auth.data.datasource.local.AuthDataStore
+import com.ebody.bip.features.auth.domain.repository.SessionManager
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
@@ -9,7 +10,7 @@ import javax.inject.Singleton
 
 @Singleton
 class AuthInterceptor @Inject constructor(
-    private val authDataStore: AuthDataStore
+    private val sessionManager: SessionManager
 ) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -20,15 +21,9 @@ class AuthInterceptor @Inject constructor(
             return chain.proceed(originalRequest)
         }
 
-        // Adicionar token ao header Authorization
+        // Obtém o token síncronamente de forma segura a partir do Flow
         val token = runBlocking {
-            authDataStore.getIdToken().let { flow ->
-                var result: String? = null
-                runBlocking {
-                    flow.collect { result = it }
-                }
-                result
-            }
+            sessionManager.getUserSession().first().idToken
         }
 
         if (token != null) {
