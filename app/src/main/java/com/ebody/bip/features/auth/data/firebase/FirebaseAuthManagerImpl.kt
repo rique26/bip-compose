@@ -38,6 +38,32 @@ class FirebaseAuthManagerImpl @Inject constructor(
         }
     }
 
+    override suspend fun register(
+        email: String,
+        password: String,
+        displayName: String
+    ): Result<FirebaseUser?, BipAuthException> {
+        return try {
+            // Cria o usuário com e-mail e senha
+            val authResult = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
+            val user = authResult.user
+
+            // Atualiza o nome de exibição (DisplayName)
+            user?.let {
+                val profileUpdates = com.google.firebase.auth.userProfileChangeRequest {
+                    this.displayName = displayName
+                }
+                it.updateProfile(profileUpdates).await()
+            }
+
+            Result.Success(user)
+        } catch (e: FirebaseAuthException) {
+            Result.Error(errorHandler.handleAuthException(e))
+        } catch (e: Exception) {
+            Result.Error(BipAuthException.Unknown(e.message ?: "Erro ao registrar"))
+        }
+    }
+
     override suspend fun logout(): Result<Unit, BipAuthException> {
         return try {
             firebaseAuth.signOut()

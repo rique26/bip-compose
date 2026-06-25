@@ -1,8 +1,8 @@
 package com.ebody.bip.core.data.remote
 
-import com.ebody.bip.features.auth.data.datasource.local.AuthDataStore
-import com.ebody.bip.features.auth.data.firebase.FirebaseAuthManager
 import com.ebody.bip.core.domain.util.Result
+import com.ebody.bip.features.auth.data.firebase.FirebaseAuthManager
+import com.ebody.bip.features.auth.domain.repository.SessionManager
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
@@ -11,7 +11,7 @@ import javax.inject.Singleton
 
 @Singleton
 class TokenRefreshInterceptor @Inject constructor(
-    private val authDataStore: AuthDataStore,
+    private val sessionManager: SessionManager,
     private val firebaseAuthManager: FirebaseAuthManager
 ) : Interceptor {
 
@@ -25,10 +25,10 @@ class TokenRefreshInterceptor @Inject constructor(
                 val newToken = runBlocking {
                     when (val result = firebaseAuthManager.getIdToken(forceRefresh = true)) {
                         is Result.Success -> {
-                            authDataStore.saveIdToken(result.data)
+                            // Atualiza o token unificado no DataStore local via SessionManager
+                            sessionManager.updateIdToken(result.data)
                             result.data
                         }
-
                         else -> null
                     }
                 }

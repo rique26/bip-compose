@@ -6,18 +6,20 @@ import com.ebody.bip.features.auth.domain.model.AuthUser
 import com.ebody.bip.features.auth.domain.model.BipAuthException
 import com.ebody.bip.features.auth.domain.model.UserMetadata
 import com.ebody.bip.core.domain.util.Result
-import com.ebody.bip.features.auth.data.datasource.local.AuthLocalDataSource
 import com.ebody.bip.features.auth.data.datasource.remote.FirebaseAuthRemoteDataSource
 import com.ebody.bip.features.auth.data.mapper.toDomainModel
+import com.ebody.bip.features.auth.domain.model.UserSession
 import com.ebody.bip.features.auth.domain.repository.AuthRepository
+import com.ebody.bip.features.auth.domain.repository.SessionManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import java.time.LocalDateTime
 import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
     private val remoteDataSource: FirebaseAuthRemoteDataSource,
-    private val localDataSource: AuthLocalDataSource
+    private val sessionManager: SessionManager
 ) : AuthRepository {
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -26,14 +28,17 @@ class AuthRepositoryImpl @Inject constructor(
             is Result.Success -> {
                 val user = result.data
                 if (user != null) {
-                    localDataSource.saveUserId(user.uid)
-                    localDataSource.saveUserEmail(user.email ?: "")
-
                     val tokenResult = remoteDataSource.getIdToken()
-                    if (tokenResult is Result.Success) {
-                        localDataSource.saveIdToken(tokenResult.data)
-                    }
+                    val idToken = if (tokenResult is Result.Success) tokenResult.data else ""
 
+                    sessionManager.saveSession(
+                        UserSession(
+                            idToken = idToken,
+                            refreshToken = "",
+                            userId = user.uid,
+                            email = user.email
+                        )
+                    )
                     Result.Success(user.toDomainModel())
                 } else {
                     Result.Error(BipAuthException.UserNotFound)
@@ -43,18 +48,23 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun register(email: String, password: String, displayName: String): Result<AuthUser, BipAuthException> {
         return when (val result = remoteDataSource.register(email, password, displayName)) {
             is Result.Success -> {
                 val user = result.data
                 if (user != null) {
-                    localDataSource.saveUserId(user.uid)
-                    localDataSource.saveUserEmail(user.email ?: email)
-
                     val tokenResult = remoteDataSource.getIdToken()
-                    if (tokenResult is Result.Success) {
-                        localDataSource.saveIdToken(tokenResult.data)
-                    }
+                    val idToken = if (tokenResult is Result.Success) tokenResult.data else ""
+
+                    sessionManager.saveSession(
+                        UserSession(
+                            idToken = idToken,
+                            refreshToken = "",
+                            userId = user.uid,
+                            email = user.email
+                        )
+                    )
 
                     Result.Success(user.toDomainModel())
                 } else {
@@ -67,16 +77,16 @@ class AuthRepositoryImpl @Inject constructor(
 
 
     override fun getAuthStateFlow(): Flow<AuthUser?> {
-        return localDataSource.getUserId().combine(localDataSource.getUserEmail()) { userId, email ->
-            if (userId != null) {
+        return sessionManager.getUserSession().map { session ->
+            if (!session.userId.isNullOrEmpty()) {
                 AuthUser(
-                    uid = userId,
-                    email = email ?: "",
+                    uid = session.userId,
+                    email = session.email ?: "",
                     displayName = null,
                     photoUrl = null,
                     phoneNumber = null,
                     isEmailVerified = false,
-                    createdAt = LocalDateTime.now(),
+                    createdAt = System.currentTimeMillis(),
                     lastLoginAt = null,
                     metadata = UserMetadata()
                 )
@@ -86,6 +96,7 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun getCurrentUser(): Result<AuthUser?, BipAuthException> {
         val firebaseUser = remoteDataSource.getCurrentUser()
         return if (firebaseUser != null) {
@@ -98,7 +109,7 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun logout(): Result<Unit, BipAuthException> {
         val result = remoteDataSource.logout()
-        localDataSource.clearAll()
+        sessionManager.clear()
         return result
     }
 
