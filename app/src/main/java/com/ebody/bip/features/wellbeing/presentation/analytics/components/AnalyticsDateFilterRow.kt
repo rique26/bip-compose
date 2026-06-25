@@ -1,19 +1,18 @@
 package com.ebody.bip.features.wellbeing.presentation.analytics.components
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDateRangePickerState
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,7 +32,11 @@ fun AnalyticsDateFilterRow(
     onFilterSelected: (AnalyticsTimeFilter) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var showDateRangePicker by remember { mutableStateOf(false) }
+    var showStartPicker by remember { mutableStateOf(false) }
+    var showEndPicker by remember { mutableStateOf(false) }
+
+    var tempStartDate by remember { mutableStateOf<LocalDate?>(null) }
+
     val options = listOf("3d", "7d", "30d", "Outro")
 
     val selectedIndex = when (selectedFilter) {
@@ -46,71 +49,81 @@ fun AnalyticsDateFilterRow(
         is AnalyticsTimeFilter.Custom -> 3
     }
 
-    SingleChoiceSegmentedButtonRow(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 4.dp)
-    ) {
+    SingleChoiceSegmentedButtonRow(modifier = modifier.fillMaxWidth()) {
         options.forEachIndexed { index, label ->
             SegmentedButton(
-                shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
                 onClick = {
                     when (index) {
                         0 -> onFilterSelected(AnalyticsTimeFilter.Days(3))
                         1 -> onFilterSelected(AnalyticsTimeFilter.Days(7))
                         2 -> onFilterSelected(AnalyticsTimeFilter.Days(30))
-                        3 -> showDateRangePicker = true
+                        3 -> showStartPicker = true // Inicia o fluxo profissional de data customizada
                     }
                 },
                 selected = selectedIndex == index,
                 label = { Text(text = label, maxLines = 1) },
-                icon = {
-                    if (index == 3) {
-                        Icon(Icons.Default.DateRange, contentDescription = null)
-                    } else {
-                        SegmentedButtonDefaults.Icon(active = selectedIndex == index)
-                    }
-                }
+                shape = SegmentedButtonDefaults.itemShape(index, options.size)
             )
         }
     }
 
-    // Date Range Picker nativo para intervalo de datas
-    if (showDateRangePicker) {
-        val dateRangePickerState = rememberDateRangePickerState()
-
+    // 1. Diálogo para Data de Início
+    if (showStartPicker) {
+        val startPickerState = rememberDatePickerState()
         DatePickerDialog(
-            onDismissRequest = { showDateRangePicker = false },
+            onDismissRequest = { showStartPicker = false },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        showDateRangePicker = false
-                        val startMillis = dateRangePickerState.selectedStartDateMillis
-                        val endMillis = dateRangePickerState.selectedEndDateMillis
-
-                        if (startMillis != null && endMillis != null) {
-                            val startDate = Instant.ofEpochMilli(startMillis)
+                        startPickerState.selectedDateMillis?.let { millis ->
+                            tempStartDate = Instant.ofEpochMilli(millis)
                                 .atZone(ZoneId.systemDefault()).toLocalDate()
-                            val endDate = Instant.ofEpochMilli(endMillis)
-                                .atZone(ZoneId.systemDefault()).toLocalDate()
-
-                            onFilterSelected(AnalyticsTimeFilter.Custom(startDate, endDate))
+                            showStartPicker = false
+                            showEndPicker = true // Abre ato contínuo a data de término
                         }
-                    },
-                    enabled = dateRangePickerState.selectedEndDateMillis != null
-                ) {
-                    Text("OK")
-                }
+                    }
+                ) { Text("Avançar") }
             },
             dismissButton = {
-                TextButton(onClick = { showDateRangePicker = false }) {
-                    Text("Cancelar")
-                }
+                TextButton(onClick = { showStartPicker = false }) { Text("Cancelar") }
             }
         ) {
-            DateRangePicker(
-                state = dateRangePickerState,
-                modifier = Modifier.padding(top = 16.dp)
+            DatePicker(
+                state = startPickerState,
+                title = { Text(text = "Data de Início", modifier = Modifier.padding(start = 24.dp, top = 16.dp)) },
+                showModeToggle = false
+            )
+        }
+    }
+
+    // 2. Diálogo para Data de Término
+    if (showEndPicker) {
+        val endPickerState = rememberDatePickerState()
+        DatePickerDialog(
+            onDismissRequest = { showEndPicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        endPickerState.selectedDateMillis?.let { millis ->
+                            val endDate = Instant.ofEpochMilli(millis)
+                                .atZone(ZoneId.systemDefault()).toLocalDate()
+
+                            tempStartDate?.let { startDate ->
+                                onFilterSelected(AnalyticsTimeFilter.Custom(startDate, endDate))
+                            }
+                            showEndPicker = false
+                        }
+                    }
+                ) { Text("Filtrar") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEndPicker = false }) { Text("Cancelar") }
+            }
+        ) {
+            DatePicker(
+                state = endPickerState,
+                title = { Text(text = "Data de Término", modifier = Modifier.padding(start = 24.dp, top = 16.dp)) },
+                showModeToggle = false
             )
         }
     }

@@ -14,4 +14,7 @@ interface MoodDao {
 
     @Query("SELECT * FROM mood_table ORDER BY timestamp DESC")
     fun getMoodHistory(): Flow<List<MoodEntity>>
+
+    @Query("SELECT * FROM mood_table WHERE timestamp BETWEEN :start AND :end")
+    suspend fun getMoodsBetween(start: String, end: String): List<MoodEntity>
 }

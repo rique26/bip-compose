@@ -10,6 +10,7 @@ import com.ebody.bip.features.wellbeing.domain.model.MoodEntry
 import com.ebody.bip.features.wellbeing.domain.repository.MoodRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.time.LocalDateTime
 import javax.inject.Inject
 
 class MoodRepositoryImpl @Inject constructor(
@@ -30,6 +31,12 @@ class MoodRepositoryImpl @Inject constructor(
             entities.map { it.toDomain() }
         }
     }
+
+    override suspend fun getMoodsBetween(start: LocalDateTime, end: LocalDateTime): List<MoodEntry> {
+        val entities = localDataSource.getMoodsBetween(start.toString(), end.toString())
+        return entities.map { it.toDomain() }
+    }
+
 
     // todo remote
     /*
