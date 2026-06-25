@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.ebody.bip.core.presentation.components.TextField
+import com.ebody.bip.core.presentation.util.DateVisualTransformation
 
 @Composable
 fun RegisterStep1(
@@ -36,6 +37,7 @@ fun RegisterStep1(
             onValueChange = onBirthDateChange,
             label = "Data de nascimento",
             placeholder = "DD/MM/AAAA",
+            visualTransformation = DateVisualTransformation(),
             keyboardType = KeyboardType.Number
         )
 

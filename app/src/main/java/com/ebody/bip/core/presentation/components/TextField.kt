@@ -35,6 +35,7 @@ fun TextField(
     isPassword: Boolean = false,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardType: KeyboardType = KeyboardType.Text,
+    keyboardOptions: KeyboardOptions = KeyboardOptions(keyboardType = keyboardType),
     singleLine: Boolean = true,
 ) {
     Column(modifier = modifier) {
@@ -73,7 +74,7 @@ fun TextField(
             trailingIcon = trailingIcon,
             visualTransformation = visualTransformation,
             singleLine = singleLine,
-            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            keyboardOptions = keyboardOptions,
             shape = RoundedCornerShape(12.dp),
             textStyle = MaterialTheme.typography.bodyMedium,
             colors = OutlinedTextFieldDefaults.colors(

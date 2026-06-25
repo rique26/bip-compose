@@ -13,11 +13,14 @@ class LoginUseCase @Inject constructor(
     private val emailValidator: EmailValidator
 ) {
     suspend operator fun invoke(request: LoginRequest): Result<AuthUser, BipAuthException> {
+        val trimmedEmail = request.email.trim()
+        val trimmedPassword = request.password.trim()
+
         return when {
-            request.email.isBlank() -> Result.Error(BipAuthException.EmptyEmail)
-            request.password.isBlank() -> Result.Error(BipAuthException.EmptyPassword)
-            !emailValidator.isValid(request.email) -> Result.Error(BipAuthException.InvalidEmail)
-            else -> repository.login(request.email, request.password)
+            trimmedEmail.isBlank() -> Result.Error(BipAuthException.EmptyEmail)
+            trimmedPassword.isBlank() -> Result.Error(BipAuthException.EmptyPassword)
+            !emailValidator.isValid(trimmedEmail) -> Result.Error(BipAuthException.InvalidEmail)
+            else -> repository.login(trimmedEmail, trimmedPassword)
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.ebody.bip.core.util
+package com.ebody.bip.core.presentation.util
 
 import android.annotation.SuppressLint
 import android.content.Intent
