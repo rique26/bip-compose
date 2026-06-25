@@ -2,8 +2,8 @@ package com.ebody.bip.features.auth.data.mapper
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import com.ebody.bip.core.domain.model.AuthUser
-import com.ebody.bip.core.domain.model.UserMetadata
+import com.ebody.bip.features.auth.domain.model.AuthUser
+import com.ebody.bip.features.auth.domain.model.UserMetadata
 import com.google.firebase.auth.FirebaseUser
 import java.time.Instant
 import java.time.LocalDateTime

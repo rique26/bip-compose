@@ -1,6 +1,6 @@
 package com.ebody.bip.features.auth.presentation.login
 
-import com.ebody.bip.core.domain.model.BipAuthException
+import com.ebody.bip.features.auth.domain.model.BipAuthException
 
 sealed interface LoginEffect {
     data object NavigateToHome : LoginEffect

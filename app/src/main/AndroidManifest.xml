@@ -41,7 +41,7 @@
         </activity>
 
         <activity
-            android:name=".core.alarm.AlarmActivity"
+            android:name=".features.schedule.data.alarm.AlarmActivity"
             android:showWhenLocked="true"
             android:turnScreenOn="true"
             android:excludeFromRecents="true"
@@ -49,7 +49,7 @@
             android:exported="false" />
 
         <receiver
-            android:name=".core.alarm.AlarmReceiver"
+            android:name=".features.schedule.data.alarm.AlarmReceiver"
             android:directBootAware="true"
             android:exported="true">
             <intent-filter>
@@ -60,11 +60,11 @@
         </receiver>
 
         <receiver
-            android:name=".core.alarm.AlarmDismissReceiver"
+            android:name=".features.schedule.data.alarm.AlarmDismissReceiver"
             android:exported="false" />
 
         <service
-            android:name=".core.alarm.AlarmService"
+            android:name=".features.schedule.data.alarm.AlarmService"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
 

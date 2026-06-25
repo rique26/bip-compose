@@ -2,8 +2,8 @@ package com.ebody.bip.core.di
 
 import android.content.Context
 import androidx.room.Room
-import com.ebody.bip.core.data.local.database.BipDatabase
-import com.ebody.bip.core.data.local.database.MedicationDatabase
+import com.ebody.bip.core.database.BipDatabase
+import com.ebody.bip.core.database.MedicationDatabase
 import com.ebody.bip.features.emergency.data.local.ContactDao
 import com.ebody.bip.features.schedule.data.local.MedicationDao
 import com.ebody.bip.features.schedule.data.local.ReminderDao

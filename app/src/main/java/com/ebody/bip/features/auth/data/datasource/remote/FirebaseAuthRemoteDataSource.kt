@@ -1,6 +1,6 @@
 package com.ebody.bip.features.auth.data.datasource.remote
 
-import com.ebody.bip.core.domain.model.BipAuthException
+import com.ebody.bip.features.auth.domain.model.BipAuthException
 import com.google.firebase.auth.FirebaseUser
 
 import com.ebody.bip.core.domain.util.Result

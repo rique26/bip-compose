@@ -2,9 +2,9 @@ package com.ebody.bip.features.auth.data.repository
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import com.ebody.bip.core.domain.model.AuthUser
-import com.ebody.bip.core.domain.model.BipAuthException
-import com.ebody.bip.core.domain.model.UserMetadata
+import com.ebody.bip.features.auth.domain.model.AuthUser
+import com.ebody.bip.features.auth.domain.model.BipAuthException
+import com.ebody.bip.features.auth.domain.model.UserMetadata
 import com.ebody.bip.core.domain.util.Result
 import com.ebody.bip.features.auth.data.datasource.local.AuthLocalDataSource
 import com.ebody.bip.features.auth.data.datasource.remote.FirebaseAuthRemoteDataSource

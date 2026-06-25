@@ -18,9 +18,9 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
-import com.ebody.bip.core.presentation.navigation.NavGraph
+import com.ebody.bip.navigation.NavGraph
 import com.ebody.bip.core.presentation.theme.AppTheme
-import com.ebody.bip.core.presentation.util.RequestBatteryOptimizationEffect
+import com.ebody.bip.core.util.RequestBatteryOptimizationEffect
 import com.ebody.bip.features.auth.presentation.viewmodel.AuthSharedViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
