@@ -1,4 +1,4 @@
-package com.ebody.bip.features.wellbeing.presentation
+package com.ebody.bip.features.wellbeing.presentation.mood
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -21,11 +21,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ebody.bip.features.wellbeing.presentation.components.DateTimePickers
-import com.ebody.bip.features.wellbeing.presentation.components.MoodHeader
-import com.ebody.bip.features.wellbeing.presentation.components.MoodSelectorCard
-import com.ebody.bip.features.wellbeing.presentation.components.SaveMoodButton
-import com.ebody.bip.features.wellbeing.presentation.components.WellbeingNotesField
+import com.ebody.bip.features.wellbeing.presentation.mood.components.DateTimePickers
+import com.ebody.bip.features.wellbeing.presentation.mood.components.MoodHeader
+import com.ebody.bip.features.wellbeing.presentation.mood.components.MoodSelectorCard
+import com.ebody.bip.features.wellbeing.presentation.mood.components.SaveMoodButton
+import com.ebody.bip.features.wellbeing.presentation.mood.components.WellbeingNotesField
 import java.time.format.DateTimeFormatter
 
 @Composable
