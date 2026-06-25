@@ -1,4 +1,4 @@
-package com.ebody.bip.features.wellbeing.presentation.components
+package com.ebody.bip.features.wellbeing.presentation.mood.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -34,7 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ebody.bip.R
-import com.ebody.bip.features.wellbeing.presentation.MoodUiState
+import com.ebody.bip.features.wellbeing.presentation.mood.MoodUiState
 
 @Composable
 fun MoodSelectorCard(

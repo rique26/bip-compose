@@ -1,4 +1,4 @@
-package com.ebody.bip.features.wellbeing.presentation
+package com.ebody.bip.features.wellbeing.presentation.mood
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
@@ -14,8 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import br.com.yourpackage.features.wellbeing.presentation.MoodViewModel
-import com.ebody.bip.features.wellbeing.presentation.components.WellbeingLevelsDialog
+import com.ebody.bip.features.wellbeing.presentation.mood.components.WellbeingLevelsDialog
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -38,11 +37,7 @@ fun MoodScreen(
     var showDialog by remember { mutableStateOf(false) }
 
     if (showDialog) {
-        Log.d("MoodScreenDebug", "Exibindo WellbeingLevelsDialog na tela.")
-        WellbeingLevelsDialog(onDismiss = {
-            Log.d("MoodScreenDebug", "Fechando diálogo (onDismiss acionado).")
-            showDialog = false
-        })
+        WellbeingLevelsDialog(onDismiss = { showDialog = false })
     }
 
     val datePickerDialog = remember(state.currentDateTime) {
@@ -88,6 +83,7 @@ fun MoodScreen(
         if (state.isSavedSuccessfully) {
             Toast.makeText(context, "Registro salvo com sucesso!", Toast.LENGTH_SHORT).show()
             viewModel.onEvent(MoodEvent.ResetSinks)
+            onBackClick()
         }
     }
 

@@ -21,7 +21,7 @@ fun NavGraphBuilder.scheduleGraph(navController: NavController) {
                     navController.navigate(Emergency)
                 },
                 onNavigateToMood = {
-                    navController.navigate(MoodRoute)
+                    navController.navigate(HistoryRoute)
                 }
             )
         }

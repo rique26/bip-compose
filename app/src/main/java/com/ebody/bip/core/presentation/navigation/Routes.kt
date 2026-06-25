@@ -40,3 +40,4 @@ sealed interface ScreenRoute : NavigationRoute
 
 // Wellbeing
 @Serializable object MoodRoute : ScreenRoute
+@Serializable object HistoryRoute : ScreenRoute

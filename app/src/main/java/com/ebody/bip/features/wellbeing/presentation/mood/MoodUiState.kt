@@ -1,4 +1,4 @@
-package com.ebody.bip.features.wellbeing.presentation
+package com.ebody.bip.features.wellbeing.presentation.mood
 
 import java.time.LocalDateTime
 

@@ -1,11 +1,11 @@
-package br.com.yourpackage.features.wellbeing.presentation
+package com.ebody.bip.features.wellbeing.presentation.mood
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ebody.bip.features.wellbeing.domain.model.MoodEntry
 import com.ebody.bip.features.wellbeing.domain.usecase.SaveMoodUseCase
-import com.ebody.bip.features.wellbeing.presentation.MoodEvent
-import com.ebody.bip.features.wellbeing.presentation.MoodUiState
+import com.ebody.bip.features.wellbeing.presentation.mood.MoodEvent
+import com.ebody.bip.features.wellbeing.presentation.mood.MoodUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

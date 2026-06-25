@@ -1,4 +1,4 @@
-package com.ebody.bip.features.wellbeing.presentation.components
+package com.ebody.bip.features.wellbeing.presentation.mood.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
