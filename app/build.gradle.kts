@@ -71,7 +71,7 @@ dependencies {
     implementation(libs.dagger.hilt.android)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.hilt.work)
-    implementation(libs.play.services.location)      // contém HiltWorkerFactory
+    implementation(libs.play.services.location)
     ksp(libs.androidx.hilt.compiler)
     ksp(libs.dagger.hilt.compiler)
 
@@ -97,6 +97,9 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
+
+    // Lottie Animation Compose
+    implementation(libs.lottie.compose)
 
     // Desugaring
     coreLibraryDesugaring(libs.desugar.jdk.libs)

@@ -64,7 +64,7 @@ fun LoginHeader() {
                 contentAlignment = Alignment.Center
             ) {
                 Image(
-                    painter = painterResource(R.drawable.img_bip_mascote07),
+                    painter = painterResource(R.drawable.mascot_bip_greeting),
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop

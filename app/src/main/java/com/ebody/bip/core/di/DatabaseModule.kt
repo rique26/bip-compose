@@ -25,7 +25,7 @@ object DatabaseModule {
     @Named("BipDb")
     fun provideBipDatabase(@ApplicationContext context: Context, ): BipDatabase {
         return Room.databaseBuilder(context, BipDatabase::class.java, "bip.db")
-            .fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigration(true)
             .build()
     }
 

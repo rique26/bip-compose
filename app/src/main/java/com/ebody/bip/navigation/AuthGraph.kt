@@ -6,6 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.ebody.bip.features.auth.presentation.login.LoginScreen
 import com.ebody.bip.features.auth.presentation.register.RegisterScreen
+import com.ebody.bip.features.auth.presentation.register.RegistrationSuccessScreen
 
 fun NavGraphBuilder.authGraph(navController: NavController) {
     navigation<AuthGraph>(startDestination = Login) {
@@ -28,13 +29,21 @@ fun NavGraphBuilder.authGraph(navController: NavController) {
 
         composable<Register> {
             RegisterScreen(
-                onNavigateToSchedule = {
-                    navController.navigate(ScheduleGraph) {
-                        popUpTo(AuthGraph) { inclusive = true }
-                    }
+                onNavigateToRegistrationSuccess = {
+                    navController.navigate(RegistrationSuccess)
                 },
                 onBackClick = {
                     navController.popBackStack()
+                }
+            )
+        }
+
+        composable<RegistrationSuccess> {
+            RegistrationSuccessScreen(
+                onNavigateToHome = {
+                    navController.navigate(ScheduleGraph){
+                        popUpTo(AuthGraph) { inclusive = true }
+                    }
                 }
             )
         }

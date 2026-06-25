@@ -1,10 +1,11 @@
-package com.ebody.bip.features.auth.domain.repository
+package com.ebody.bip.features.auth.data.repository
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.ebody.bip.features.auth.domain.model.UserSession
+import com.ebody.bip.features.auth.domain.repository.SessionManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject

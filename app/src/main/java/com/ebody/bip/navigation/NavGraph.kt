@@ -12,8 +12,8 @@ fun NavGraph(
 
     NavHost(
         navController = navController,
-        //startDestination = if (isAuthenticated) ScheduleGraph else AuthGraph
-        startDestination = ScheduleGraph
+        startDestination = if (isAuthenticated) ScheduleGraph else AuthGraph
+        //startDestination = ScheduleGraph
     ) {
         authGraph(navController)
         scheduleGraph(navController)

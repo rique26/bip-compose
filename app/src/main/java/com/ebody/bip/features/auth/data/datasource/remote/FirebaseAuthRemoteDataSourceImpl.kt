@@ -22,43 +22,10 @@ class FirebaseAuthRemoteDataSourceImpl @Inject constructor(
         password: String,
         displayName: String
     ): Result<FirebaseUser?, BipAuthException> {
-//        return firebaseAuthManager.(email, password)
-//        return when (val result = firebaseAuthManager.register(email, password, displayName)) {
-//            is Result.Success -> {
-//                val user = result.data
-//                if (user != null) {
-//                    authDataStore.saveUserId(user.uid)
-//                    authDataStore.saveUserEmail(user.email ?: "")
-//
-//                    // Salvar token
-//                    when (val tokenResult = firebaseAuthManager.getIdToken()) {
-//                        is Result.Success -> {
-//                            authDataStore.saveIdToken(tokenResult.data)
-//                        }
-//                        is Result.Error -> {
-//                            return Result.Error(tokenResult.exception)
-//                        }
-//                        Result.Loading -> {}
-//                    }
-//                }
-//                Result.Success(user)
-//            }
-//            is Result.Error -> Result.Error(result.exception)
-//            Result.Loading -> Result.Loading
-//        }
-        return Result.Success(null)
+        return firebaseAuthManager.register(email, password, displayName)
     }
 
     override suspend fun logout(): Result<Unit, BipAuthException> {
-//        return when (val result = firebaseAuthManager.logout()) {
-//            is Result.Success -> {
-//                authDataStore.clearAll()
-//                Result.Success(Unit)
-//            }
-//
-//            is Result.Error -> Result.Error(result.exception)
-//            Result.Loading -> Result.Loading
-//        }
         return firebaseAuthManager.logout()
     }
 
