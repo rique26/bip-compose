@@ -20,7 +20,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import com.ebody.bip.navigation.NavGraph
 import com.ebody.bip.core.presentation.theme.AppTheme
-import com.ebody.bip.core.util.RequestBatteryOptimizationEffect
+import com.ebody.bip.core.presentation.util.RequestBatteryOptimizationEffect
 import com.ebody.bip.features.auth.presentation.AuthSharedViewModel
 import dagger.hilt.android.AndroidEntryPoint
 

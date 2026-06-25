@@ -28,7 +28,12 @@ class FirebaseAuthManagerImpl @Inject constructor(
                 .signInWithEmailAndPassword(email, password)
                 .await()
 
-            Result.Success(result.user)
+            val user = result.user
+            if (user != null) {
+                Result.Success(user)
+            } else {
+                Result.Error(BipAuthException.Unknown("Usuário não encontrado após autenticação."))
+            }
 
         } catch (e: FirebaseAuthException) {
             val mappedError = errorHandler.handleAuthException(e)
