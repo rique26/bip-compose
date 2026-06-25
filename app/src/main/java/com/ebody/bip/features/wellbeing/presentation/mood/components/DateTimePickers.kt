@@ -1,4 +1,4 @@
-package com.ebody.bip.features.wellbeing.presentation.components
+package com.ebody.bip.features.wellbeing.presentation.mood.components
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -16,7 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.ebody.bip.features.wellbeing.presentation.MoodUiState
+import com.ebody.bip.features.wellbeing.presentation.mood.MoodUiState
 import java.time.format.DateTimeFormatter
 
 @Composable
