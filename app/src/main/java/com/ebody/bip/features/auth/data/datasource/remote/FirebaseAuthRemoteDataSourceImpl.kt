@@ -1,7 +1,7 @@
 package com.ebody.bip.features.auth.data.datasource.remote
 
-import com.ebody.bip.core.data.remote.firebase.FirebaseAuthManager
-import com.ebody.bip.core.domain.model.BipAuthException
+import com.ebody.bip.features.auth.data.firebase.FirebaseAuthManager
+import com.ebody.bip.features.auth.domain.model.BipAuthException
 import com.ebody.bip.core.domain.util.Result
 import com.google.firebase.auth.FirebaseUser
 import javax.inject.Inject
