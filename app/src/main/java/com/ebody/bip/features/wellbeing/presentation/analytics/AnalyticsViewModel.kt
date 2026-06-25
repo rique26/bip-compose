@@ -2,13 +2,19 @@ package com.ebody.bip.features.wellbeing.presentation.analytics
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ebody.bip.features.wellbeing.domain.usecase.GetAnalyticsMetricsUseCase
+import com.ebody.bip.features.wellbeing.presentation.analytics.util.MoodColors
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class AnalyticsViewModel @Inject constructor() : ViewModel() {
+@HiltViewModel
+class AnalyticsViewModel @Inject constructor(
+    private val getAnalyticsMetricsUseCase: GetAnalyticsMetricsUseCase
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AnalyticsUiState>(AnalyticsUiState.Loading)
     val uiState: StateFlow<AnalyticsUiState> = _uiState.asStateFlow()
@@ -22,34 +28,32 @@ class AnalyticsViewModel @Inject constructor() : ViewModel() {
             val currentState = _uiState.value
 
             if (currentState is AnalyticsUiState.Success) {
-                _uiState.value = currentState.copy(
-                    selectedFilter = filter,
-                    isChartLoading = true
-                )
+                _uiState.value = currentState.copy(selectedFilter = filter, isChartLoading = true)
             } else {
                 _uiState.value = AnalyticsUiState.Loading
             }
 
             try {
-                kotlinx.coroutines.delay(300)
+                val result = getAnalyticsMetricsUseCase(filter)
 
-                val items = listOf(
-                    ChartItem(label = "Ótimo", value = 2f, colorHex = "#1DB954", count = 2),
-                    ChartItem(label = "Bem", value = 4f, colorHex = "#FFD13B", count = 4),
-                    ChartItem(label = "Estranho", value = 1f, colorHex = "#9C27B0", count = 1),
-                    ChartItem(label = "Mal", value = 1f, colorHex = "#E53935", count = 1)
-                )
+                val items = result.counts.map { (moodName, count) ->
+                    ChartItem(
+                        label = "Nível $moodName",
+                        value = count.toFloat(),
+                        colorHex = MoodColors.getColorForMood(moodName),
+                        count = count
+                    )
+                }
 
                 _uiState.value = AnalyticsUiState.Success(
-                    totalEntries = items.sumOf { it.count },
-                    averageMood = "Bem",
+                    totalEntries = result.total,
+                    averageMood = result.average,
                     chartItems = items,
                     selectedFilter = filter,
                     isChartLoading = false
                 )
-
             } catch (e: Exception) {
-                _uiState.value = AnalyticsUiState.Error("Não foi possível carregar as estatísticas.")
+                _uiState.value = AnalyticsUiState.Error("Falha ao carregar métricas.")
             }
         }
     }

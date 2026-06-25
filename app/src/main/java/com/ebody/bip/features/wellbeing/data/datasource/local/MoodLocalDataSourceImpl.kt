@@ -15,4 +15,8 @@ class MoodLocalDataSourceImpl @Inject constructor(
     override fun getMoodHistory(): Flow<List<MoodEntity>> {
         return moodDao.getMoodHistory()
     }
+
+    override suspend fun getMoodsBetween(start: String, end: String): List<MoodEntity> {
+        return moodDao.getMoodsBetween(start, end)
+    }
 }
