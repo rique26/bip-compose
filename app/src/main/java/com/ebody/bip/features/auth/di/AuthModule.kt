@@ -1,13 +1,13 @@
 package com.ebody.bip.features.auth.di
 
-import com.ebody.bip.core.data.local.datastore.AuthDataStore
-import com.ebody.bip.core.data.local.datastore.AuthDataStoreImpl
-import com.ebody.bip.core.data.remote.firebase.FirebaseAuthManager
-import com.ebody.bip.core.data.remote.firebase.FirebaseAuthManagerImpl
+import com.ebody.bip.features.auth.data.datasource.local.AuthDataStore
+import com.ebody.bip.features.auth.data.datasource.local.AuthDataStoreImpl
+import com.ebody.bip.features.auth.data.firebase.FirebaseAuthManager
+import com.ebody.bip.features.auth.data.firebase.FirebaseAuthManagerImpl
 import com.ebody.bip.features.auth.domain.repository.AuthRepository
 import com.ebody.bip.features.auth.data.repository.AuthRepositoryImpl
-import com.ebody.bip.core.domain.util.AndroidEmailValidator
-import com.ebody.bip.core.domain.util.EmailValidator
+import com.ebody.bip.features.auth.util.AndroidEmailValidator
+import com.ebody.bip.features.auth.util.EmailValidator
 import com.ebody.bip.features.auth.data.datasource.local.AuthLocalDataSource
 import com.ebody.bip.features.auth.data.datasource.local.AuthLocalDataSourceImpl
 import com.ebody.bip.features.auth.data.datasource.remote.FirebaseAuthRemoteDataSource

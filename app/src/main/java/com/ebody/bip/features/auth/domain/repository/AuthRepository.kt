@@ -1,7 +1,7 @@
 package com.ebody.bip.features.auth.domain.repository
 
-import com.ebody.bip.core.domain.model.AuthUser
-import com.ebody.bip.core.domain.model.BipAuthException
+import com.ebody.bip.features.auth.domain.model.AuthUser
+import com.ebody.bip.features.auth.domain.model.BipAuthException
 import com.ebody.bip.core.domain.util.Result
 import kotlinx.coroutines.flow.Flow
 
