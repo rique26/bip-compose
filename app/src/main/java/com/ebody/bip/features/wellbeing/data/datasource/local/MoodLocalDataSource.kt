@@ -6,4 +6,5 @@ import kotlinx.coroutines.flow.Flow
 interface MoodLocalDataSource {
     suspend fun insertMood(mood: MoodEntity)
     fun getMoodHistory(): Flow<List<MoodEntity>>
+    suspend fun getMoodsBetween(start: String, end: String): List<MoodEntity>
 }
