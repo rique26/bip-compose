@@ -28,9 +28,6 @@ class HomeViewModel @Inject constructor(
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
-    init {
-        loadData()
-    }
 
     val uiState: StateFlow<HomeDashboardUiState> = getRemindersUseCase()
         .map { reminders ->
@@ -60,14 +57,6 @@ class HomeViewModel @Inject constructor(
                     _isRefreshing.update { false }
                 }
             }
-        }
-    }
-
-    private fun loadData() {
-        viewModelScope.launch {
-            _isRefreshing.update { true }
-            syncRemindersUseCase()
-            _isRefreshing.update { false }
         }
     }
 }
