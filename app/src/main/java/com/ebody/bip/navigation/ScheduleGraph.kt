@@ -1,5 +1,7 @@
 package com.ebody.bip.navigation
 
+import android.os.Handler
+import android.os.Looper
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -40,8 +42,11 @@ fun NavGraphBuilder.scheduleGraph(navController: NavController) {
                 medicationIds = args.medicationIds,
                 onBack = { navController.popBackStack() },
                 onFinish = {
-                    navController.navigate(Home) {
-                        popUpTo(ScheduleGraph) { inclusive = true }
+                    Handler(Looper.getMainLooper()).post {
+                        navController.navigate(Home) {
+                            popUpTo<ScheduleGraph> { inclusive = true }
+                            launchSingleTop = true
+                        }
                     }
                 }
             )

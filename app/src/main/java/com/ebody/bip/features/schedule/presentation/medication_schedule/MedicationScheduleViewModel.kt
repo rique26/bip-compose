@@ -24,6 +24,9 @@ class MedicationScheduleViewModel @Inject constructor(
     private val _medications = MutableStateFlow<List<Medication>>(emptyList())
     val medications: StateFlow<List<Medication>> = _medications.asStateFlow()
 
+    private val _isSaving = MutableStateFlow(false)
+    val isSaving: StateFlow<Boolean> = _isSaving.asStateFlow()
+
     fun loadMedications(ids: List<Long>) {
         viewModelScope.launch {
             val loadedMedications = ids.mapNotNull { id ->
@@ -42,23 +45,27 @@ class MedicationScheduleViewModel @Inject constructor(
         if (meds.isEmpty()) return
 
         viewModelScope.launch {
-            for (med in meds) {
-                val reminders = scheduleTimes.map { (hour, minute) ->
-                    MedicationReminder(
-                        medication = med,
-                        time = LocalTime.of(hour, minute),
-                        dosage = dosage,
-                        createdAt = System.currentTimeMillis(),
-                        requestCode = Random.nextInt(10001)
-                    )
-                }
+            _isSaving.value = true
+            try {
+                for (med in meds) {
+                    val reminders = scheduleTimes.map { (hour, minute) ->
+                        MedicationReminder(
+                            medication = med,
+                            time = LocalTime.of(hour, minute),
+                            dosage = dosage,
+                            createdAt = System.currentTimeMillis(),
+                            requestCode = Random.nextInt(10001)
+                        )
+                    }
 
-                reminders.forEach { reminder ->
-                    saveReminderUseCase(reminder)
+                    reminders.forEach { reminder ->
+                        saveReminderUseCase(reminder)
+                    }
                 }
+                onSuccess()
+            } finally {
+                _isSaving.value = false
             }
-
-            onSuccess()
         }
     }
 }
