@@ -2,13 +2,18 @@ package com.ebody.bip.features.wellbeing.presentation.mood
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ebody.bip.core.domain.intelligence.model.BipAnalysisResult
+import com.ebody.bip.core.domain.intelligence.usecase.EvaluateBipIntelligenceUseCase
 import com.ebody.bip.features.wellbeing.domain.model.MoodEntry
 import com.ebody.bip.features.wellbeing.domain.usecase.SaveMoodUseCase
 import com.ebody.bip.features.wellbeing.presentation.mood.MoodEvent
 import com.ebody.bip.features.wellbeing.presentation.mood.MoodUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -16,8 +21,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MoodViewModel @Inject constructor(
-    private val saveMoodUseCase: SaveMoodUseCase
+    private val saveMoodUseCase: SaveMoodUseCase,
+    private val evaluateBipIntelligence: EvaluateBipIntelligenceUseCase
 ) : ViewModel() {
+
+    private val _bipDialogEvent = MutableSharedFlow<BipAnalysisResult>()
+    val bipDialogEvent: SharedFlow<BipAnalysisResult> = _bipDialogEvent.asSharedFlow()
 
     private val _uiState = MutableStateFlow(MoodUiState())
     val uiState: StateFlow<MoodUiState> = _uiState.asStateFlow()
@@ -59,6 +68,10 @@ class MoodViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(isSaving = false, isSavedSuccessfully = true, selectedMood = null, notes = "")
                 }
+
+                // Executa a Ingestão de IA e dispara o evento para o Mascote reagir
+                val analysisResult = evaluateBipIntelligence()
+                _bipDialogEvent.emit(analysisResult)
             }.onFailure { e ->
                 _uiState.update {
                     it.copy(isSaving = false, errorMessage = e.localizedMessage ?: "Erro desconhecido")

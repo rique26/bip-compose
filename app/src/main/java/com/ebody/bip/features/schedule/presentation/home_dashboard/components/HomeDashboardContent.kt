@@ -1,5 +1,6 @@
 package com.ebody.bip.features.schedule.presentation.home_dashboard.components
 
+import android.graphics.drawable.Icon
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,13 +14,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.SegmentedButtonDefaults.Icon
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,10 +48,12 @@ fun HomeDashboardContent(
     onNavigateToEmergency: () -> Unit,
     onNavigateToMood: () -> Unit,
     onDeleteReminder: (MedicationReminder) -> Unit,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+    onLogout: () -> Unit
 ) {
     val systemBarPaddings = WindowInsets.systemBars.asPaddingValues()
     var itemToDelete by remember { mutableStateOf<MedicationReminder?>(null) }
+    var showMenu by remember { mutableStateOf(false) } // Controle do Dropdown
 
     itemToDelete?.let { reminder ->
         AlertDialog(
@@ -78,7 +88,6 @@ fun HomeDashboardContent(
             isRefreshing = isRefreshing,
             onRefresh = onRefresh,
             modifier = Modifier
-                .fillMaxSize()
                 .padding(padding)
         ) {
             LazyColumn(

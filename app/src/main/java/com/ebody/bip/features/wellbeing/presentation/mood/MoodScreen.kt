@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import com.ebody.bip.core.domain.intelligence.model.BipAnalysisResult
 import com.ebody.bip.features.wellbeing.presentation.mood.components.WellbeingLevelsDialog
 import java.time.format.DateTimeFormatter
 
@@ -35,6 +36,7 @@ fun MoodScreen(
     val timeFormatter = remember { DateTimeFormatter.ofPattern("HH:mm") }
 
     var showDialog by remember { mutableStateOf(false) }
+    var showBipAdvice by remember { mutableStateOf<BipAnalysisResult?>(null) }
 
     if (showDialog) {
         WellbeingLevelsDialog(onDismiss = { showDialog = false })
@@ -71,6 +73,12 @@ fun MoodScreen(
         )
     }
 
+    LaunchedEffect(viewModel) {
+        viewModel.bipDialogEvent.collect { analysisResult ->
+            showBipAdvice = analysisResult
+        }
+    }
+
     LaunchedEffect(isDatePressed) {
         if (isDatePressed) datePickerDialog.show()
     }
@@ -91,6 +99,25 @@ fun MoodScreen(
         state.errorMessage?.let {
             Toast.makeText(context, "Erro: $it", Toast.LENGTH_LONG).show()
         }
+    }
+
+    showBipAdvice?.let { advice ->
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = {
+                showBipAdvice = null
+                onBackClick()
+            },
+            title = { androidx.compose.material3.Text("Mensagem do BIP") },
+            text = { androidx.compose.material3.Text(advice.message) },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = {
+                    showBipAdvice = null
+                    onBackClick()
+                }) {
+                    androidx.compose.material3.Text("Entendido")
+                }
+            }
+        )
     }
 
     MoodContent(

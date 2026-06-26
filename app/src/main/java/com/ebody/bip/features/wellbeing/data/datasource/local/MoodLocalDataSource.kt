@@ -9,4 +9,5 @@ interface MoodLocalDataSource {
     suspend fun insertMoods(moods: List<MoodEntity>)
     fun getMoodHistory(): Flow<List<MoodEntity>>
     suspend fun getMoodsBetween(start: String, end: String): List<MoodEntity>
+    suspend fun getLastMoods(limit: Int): List<MoodEntity>
 }
