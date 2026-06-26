@@ -40,6 +40,7 @@ fun HistoryScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val currentFilter by viewModel.selectedFilter.collectAsStateWithLifecycle()
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     var selectedEntryDetails by remember { mutableStateOf<MoodEntry?>(null) }
 
     Scaffold(
@@ -73,9 +74,13 @@ fun HistoryScreen(
         HistoryContent(
             uiState = uiState,
             currentFilter = currentFilter,
+            isRefreshing = isRefreshing,
             onFilterSelected = viewModel::onFilterSelected,
             onEntryClick = { entry ->
                 selectedEntryDetails = entry
+            },
+            onRefresh = {
+                viewModel.refreshData()
             },
             modifier = Modifier.padding(paddingValues)
         )

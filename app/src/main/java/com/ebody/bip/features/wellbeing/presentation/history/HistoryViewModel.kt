@@ -4,23 +4,36 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ebody.bip.features.wellbeing.domain.model.TimeFilter
 import com.ebody.bip.features.wellbeing.domain.usecase.GetMoodHistoryUseCase
+import com.ebody.bip.features.wellbeing.domain.usecase.SyncMoodsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import javax.inject.Inject
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
-    getMoodHistoryUseCase: GetMoodHistoryUseCase
+    getMoodHistoryUseCase: GetMoodHistoryUseCase,
+    private val syncMoodsUseCase: SyncMoodsUseCase
 ) : ViewModel() {
 
     private val _selectedFilter = MutableStateFlow(TimeFilter.LAST_30_DAYS)
     val selectedFilter: StateFlow<TimeFilter> = _selectedFilter.asStateFlow()
+
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    init {
+        loadInitialData()
+    }
 
     val uiState: StateFlow<HistoryUiState> = combine(
         getMoodHistoryUseCase(),
@@ -47,13 +60,39 @@ class HistoryViewModel @Inject constructor(
         }
 
         HistoryUiState(records = filteredList, isLoading = false)
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = HistoryUiState(isLoading = true)
-    )
+    }
+        .distinctUntilChanged()
+        .onStart {
+            // Estado inicial de carregamento caso o Room esteja vazio ou buscando cache
+            emit(HistoryUiState(isLoading = true))
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = HistoryUiState(isLoading = true)
+        )
+
+    private fun loadInitialData() {
+        viewModelScope.launch {
+            runCatching {
+                syncMoodsUseCase()
+            }
+        }
+    }
 
     fun onFilterSelected(filter: TimeFilter) {
         _selectedFilter.value = filter
+    }
+
+    fun refreshData() {
+        viewModelScope.launch {
+            _isRefreshing.update { true }
+            runCatching {
+                syncMoodsUseCase()
+            }.onFailure {
+                // Tratamento de falhas na camada de UI
+            }
+            _isRefreshing.update { false }
+        }
     }
 }
