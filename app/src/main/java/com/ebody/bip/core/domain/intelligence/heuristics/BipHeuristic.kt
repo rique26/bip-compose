@@ -1,11 +1,7 @@
 package com.ebody.bip.core.domain.intelligence.heuristics
 
-import com.ebody.bip.core.domain.intelligence.model.BipRiskLevel
+import com.ebody.bip.core.domain.intelligence.model.HeuristicResult
 
-/**
- * Contrato base para uma regra heurística do Agente BIP.
- * Retorna um nível de risco caso a regra seja acionada, ou null se a condição não se aplicar.
- */
 fun interface BipHeuristic {
-    suspend fun evaluate(): BipRiskLevel?
+    suspend fun evaluate(): HeuristicResult?
 }

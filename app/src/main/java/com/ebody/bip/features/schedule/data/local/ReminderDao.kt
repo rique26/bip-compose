@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.ebody.bip.features.schedule.data.model.MedicationTakenEntity
 import com.ebody.bip.features.schedule.data.model.ReminderEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -24,4 +25,9 @@ interface ReminderDao {
     @Delete
     suspend fun deleteReminder(reminder: ReminderEntity)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMedicationLog(log: MedicationTakenEntity)
+
+    @Query("SELECT isTaken FROM medication_history WHERE timestamp BETWEEN :start AND :end")
+    suspend fun getRemindersStatusBetween(start: Long, end: Long): List<Boolean>
 }

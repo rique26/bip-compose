@@ -10,28 +10,37 @@ class EvaluateBipIntelligenceUseCase @Inject constructor(
     private val heuristics: Set<@JvmSuppressWildcards BipHeuristic>
 ) {
     suspend operator fun invoke(): BipAnalysisResult {
-        // Executa todas as heurísticas e filtra as que retornaram um risco detectado
-        val detectedRisks = heuristics.mapNotNull { it.evaluate() }
+        // Executa todas as heurísticas e soma os scores de severidade
+        val results = heuristics.mapNotNull { it.evaluate() }
 
-        // Define o nível de risco como o mais grave (maior ordinal no enum) ou Estável por padrão
-        val highestRisk = detectedRisks.maxOrNull() ?: BipRiskLevel.STABLE
+        // Se nenhuma heurística detectou nada, estamos estáveis
+        if (results.isEmpty()) {
+            return defaultResult(BipRiskLevel.STABLE, "Continue mantendo sua rotina em dia! Estou de olho para te ajudar.", BipMascotExpression.HAPPY)
+        }
 
-        return when (highestRisk) {
-            BipRiskLevel.STABLE -> BipAnalysisResult(
+        // Pega a severidade acumulada. Pode ultrapassar 1.0 se múltiplos fatores estiverem ruins
+        val totalSeverity = results.sumOf { it.severityScore.toDouble() }.toFloat()
+
+        // Sistema de Thresholds (Limiares) Ponderados
+        return when {
+            totalSeverity >= 1.5f -> BipAnalysisResult(
+                riskLevel = BipRiskLevel.HIGH_RISK,
+                message = "Identifiquei um acúmulo de fatores de alerta. Considere buscar ajuda médica ou revisar seus cuidados imediatamente.",
+                mascotExpression = BipMascotExpression.WORRIED
+            )
+            totalSeverity >= 0.7f -> BipAnalysisResult(
+                riskLevel = BipRiskLevel.ALERT,
+                message = "Notei algumas variações na sua rotina, humor ou medicação. Beba água, descanse e cuide-se.",
+                mascotExpression = BipMascotExpression.CONCERNED
+            )
+            else -> BipAnalysisResult(
                 riskLevel = BipRiskLevel.STABLE,
                 message = "Continue mantendo sua rotina em dia! Estou de olho para te ajudar.",
                 mascotExpression = BipMascotExpression.HAPPY
             )
-            BipRiskLevel.ALERT -> BipAnalysisResult(
-                riskLevel = BipRiskLevel.ALERT,
-                message = "Notei algumas variações na sua rotina ou sintomas. Beba água, descanse e cuide-se.",
-                mascotExpression = BipMascotExpression.CONCERNED
-            )
-            BipRiskLevel.HIGH_RISK -> BipAnalysisResult(
-                riskLevel = BipRiskLevel.HIGH_RISK,
-                message = "Identifiquei um padrão de alerta prolongado ou crítico. Considere buscar ajuda médica imediatamente.",
-                mascotExpression = BipMascotExpression.WORRIED
-            )
         }
     }
+
+    private fun defaultResult(level: BipRiskLevel, msg: String, expr: BipMascotExpression) =
+        BipAnalysisResult(riskLevel = level, message = msg, mascotExpression = expr)
 }
