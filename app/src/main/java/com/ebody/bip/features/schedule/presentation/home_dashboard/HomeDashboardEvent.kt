@@ -6,4 +6,5 @@ sealed interface HomeDashboardEvent {
     data class DeleteReminder(val reminder: MedicationReminder) : HomeDashboardEvent
     object Refresh : HomeDashboardEvent
     data object Logout : HomeDashboardEvent
+    data class MedicationTaken(val reminderId: Long) : HomeDashboardEvent
 }

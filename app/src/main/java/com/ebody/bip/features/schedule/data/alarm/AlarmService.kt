@@ -17,7 +17,7 @@ class AlarmService : Service() {
     private var mediaPlayer: MediaPlayer? = null
     private var wakeLock: PowerManager.WakeLock? = null
 
-    private val pendingAlarms = ArrayDeque<Pair<String, String>>()
+    private val pendingAlarms = ArrayDeque<Triple<String, String, Long>>()
     private var isPlaying = false
 
     companion object {
@@ -41,6 +41,7 @@ class AlarmService : Service() {
             ACTION_NEW_ALARM -> {
                 val label  = intent.getStringExtra("ALARM_LABEL") ?: "Medicamento"
                 val dosage = intent.getStringExtra("ALARM_DOSAGE") ?: ""
+                val reminderId = intent.getLongExtra("REMINDER_ID", -1L)
                 Log.d(TAG, "Action received: ACTION_NEW_ALARM with label: $label, dosage: $dosage")
 
                 if (!isPlaying) {
@@ -48,13 +49,12 @@ class AlarmService : Service() {
                     isPlaying = true
                     acquireWakeLock()
                     createChannel()
-                    // ✅ startForeground apenas UMA vez
-                    startForeground(NOTIFICATION_ID, buildNotification(label, dosage))
+                    startForeground(NOTIFICATION_ID, buildNotification(label, dosage, reminderId))
                     playSound()
                 } else {
-                    // ✅ Enfileira e apenas ATUALIZA a notificação existente — sem nova entrada
+                    // Enfileira e apenas ATUALIZA a notificação existente — sem nova entrada
                     Log.d(TAG, "Alarm is already playing. Enqueuing alarm (label: $label, dosage: $dosage) and updating notification.")
-                    pendingAlarms.addLast(label to dosage)
+                    pendingAlarms.addLast(Triple(label, dosage, reminderId))
                     updateNotification()
                 }
             }
@@ -63,6 +63,7 @@ class AlarmService : Service() {
                 // Primeira chamada sem action (compatibilidade)
                 val label  = intent?.getStringExtra("ALARM_LABEL") ?: "Medicamento"
                 val dosage = intent?.getStringExtra("ALARM_DOSAGE") ?: ""
+                val reminderId = intent?.getLongExtra("REMINDER_ID", -1L) ?: -1L
                 Log.d(TAG, "Fallback/Legacy intent received with label: $label, dosage: $dosage")
 
                 if (!isPlaying) {
@@ -70,11 +71,11 @@ class AlarmService : Service() {
                     isPlaying = true
                     acquireWakeLock()
                     createChannel()
-                    startForeground(NOTIFICATION_ID, buildNotification(label, dosage))
+                    startForeground(NOTIFICATION_ID, buildNotification(label, dosage, reminderId))
                     playSound()
                 } else {
                     Log.d(TAG, "Alarm is already playing (fallback). Enqueuing alarm (label: $label, dosage: $dosage) and updating notification.")
-                    pendingAlarms.addLast(label to dosage)
+                    pendingAlarms.addLast(Triple(label, dosage, reminderId ?: -1L))
                     updateNotification()
                 }
             }
@@ -103,10 +104,10 @@ class AlarmService : Service() {
             stopSelf()
         } else {
             // Próximo alarme na fila
-            val (nextLabel, nextDosage) = pendingAlarms.removeFirst()
+            val (nextLabel, nextDosage, nextId) = pendingAlarms.removeFirst()
             Log.d(TAG, "Next alarm retrieved from queue: label: $nextLabel, dosage: $nextDosage. Restarting sound/notification.")
             stopSound()
-            startForeground(NOTIFICATION_ID, buildNotification(nextLabel, nextDosage))
+            startForeground(NOTIFICATION_ID, buildNotification(nextLabel, nextDosage, nextId))
             playSound()
         }
     }
@@ -119,6 +120,8 @@ class AlarmService : Service() {
         val contentTitle = "💊 Hora de tomar seus medicamentos"
         val contentText = next?.let { "Próximo: ${it.first} — ${it.second} (+ $total na fila)" }
             ?: "Verifique seus medicamentos pendentes"
+
+        val nextId = next?.third ?: -1L //
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
@@ -153,7 +156,7 @@ class AlarmService : Service() {
         ).apply { acquire(10 * 60 * 1000L) } // máx 10 min
     }
 
-    private fun buildNotification(label: String, dosage: String): Notification {
+    private fun buildNotification(label: String, dosage: String, reminderId: Long): Notification {
         Log.d(TAG, "Building full screen notification for label: $label, dosage: $dosage")
         val fullScreenIntent = PendingIntent.getActivity(
             this,
@@ -162,6 +165,7 @@ class AlarmService : Service() {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION)
                 putExtra("ALARM_LABEL", label)
                 putExtra("ALARM_DOSAGE", dosage)
+                putExtra("REMINDER_ID", reminderId)
             },
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
