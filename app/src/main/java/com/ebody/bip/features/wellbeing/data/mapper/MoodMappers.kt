@@ -1,10 +1,14 @@
 package com.ebody.bip.features.wellbeing.data.mapper
 
+import com.ebody.bip.features.schedule.data.datasource.remote.MedicationReminderRemote
+import com.ebody.bip.features.schedule.domain.model.Medication
+import com.ebody.bip.features.schedule.domain.model.MedicationReminder
 import com.ebody.bip.features.wellbeing.data.model.MoodEntity
 import com.ebody.bip.features.wellbeing.data.model.MoodRemoteEntity
 import com.ebody.bip.features.wellbeing.domain.model.MoodEntry
 import java.time.Instant
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -26,11 +30,11 @@ fun MoodEntry.toEntity(): MoodEntity {
     )
 }
 
-fun MoodRemoteEntity.toDomain(firestoreId: String): MoodEntry {
+fun MoodRemoteEntity.toDomain(): MoodEntry {
     val dateString = dateTime as? String ?: LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
 
     return MoodEntry(
-        id = convertFirestoreIdToLong(firestoreId),
+        id = id,
         level = level,
         notes = notes,
         dateTime = LocalDateTime.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
@@ -44,10 +48,4 @@ fun MoodEntry.toRemoteEntity(): MoodRemoteEntity {
         notes = notes,
         dateTime = dateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
     )
-}
-
-private fun convertFirestoreIdToLong(firestoreId: String): Long {
-    if (firestoreId.isBlank()) return 0L
-    val hash = firestoreId.hashCode().toLong()
-    return if (hash < 0) -hash else hash
 }

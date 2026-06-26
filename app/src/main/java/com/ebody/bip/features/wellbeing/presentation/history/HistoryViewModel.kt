@@ -10,8 +10,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -21,7 +23,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
-    getMoodHistoryUseCase: GetMoodHistoryUseCase,
+    private val getMoodHistoryUseCase: GetMoodHistoryUseCase,
     private val syncMoodsUseCase: SyncMoodsUseCase
 ) : ViewModel() {
 
@@ -30,10 +32,6 @@ class HistoryViewModel @Inject constructor(
 
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
-
-    init {
-        loadInitialData()
-    }
 
     val uiState: StateFlow<HistoryUiState> = combine(
         getMoodHistoryUseCase(),
@@ -45,6 +43,7 @@ class HistoryViewModel @Inject constructor(
             TimeFilter.LAST_30_DAYS -> {
                 entries.filter { it.dateTime.isAfter(now.minusDays(30)) }
             }
+
             TimeFilter.PREVIOUS_MONTH -> {
                 val startOfCurrentMonth = now.withDayOfMonth(1).toLocalDate()
                 val startOfPreviousMonth = startOfCurrentMonth.minusMonths(1)
@@ -56,43 +55,40 @@ class HistoryViewModel @Inject constructor(
                             (date.isBefore(endOfPreviousMonth) || date.isEqual(endOfPreviousMonth))
                 }
             }
+
             TimeFilter.ALL_TIME -> entries
         }
-
-        HistoryUiState(records = filteredList, isLoading = false)
+        filteredList
     }
-        .distinctUntilChanged()
-        .onStart {
-            // Estado inicial de carregamento caso o Room esteja vazio ou buscando cache
-            emit(HistoryUiState(isLoading = true))
+        .map { filteredRecords ->
+            HistoryUiState(records = filteredRecords, isLoading = false)
         }
+        .onStart { emit(HistoryUiState(isLoading = true)) }
+        .catch { e -> emit(HistoryUiState(error = e.message)) }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = HistoryUiState(isLoading = true)
         )
 
-    private fun loadInitialData() {
-        viewModelScope.launch {
-            runCatching {
-                syncMoodsUseCase()
+
+    fun onEvent(event: HistoryEvent) {
+        when (event) {
+            is HistoryEvent.OnFilterSelected -> {
+                _selectedFilter.value = event.filter
+            }
+
+            is HistoryEvent.Refresh -> {
+                viewModelScope.launch {
+                    _isRefreshing.update { true }
+                    syncMoodsUseCase()
+                    _isRefreshing.update { false }
+                }
             }
         }
     }
 
     fun onFilterSelected(filter: TimeFilter) {
         _selectedFilter.value = filter
-    }
-
-    fun refreshData() {
-        viewModelScope.launch {
-            _isRefreshing.update { true }
-            runCatching {
-                syncMoodsUseCase()
-            }.onFailure {
-                // Tratamento de falhas na camada de UI
-            }
-            _isRefreshing.update { false }
-        }
     }
 }
