@@ -1,6 +1,7 @@
 package com.ebody.bip.features.schedule.data.repository
 
 import android.util.Log
+import com.ebody.bip.core.domain.intelligence.repository.MedicationIntelligenceRepository
 import com.ebody.bip.core.domain.util.Result
 import com.ebody.bip.features.auth.domain.repository.SessionManager
 import com.ebody.bip.features.schedule.data.datasource.local.MedicationLocalDataSource

@@ -18,10 +18,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
 import com.ebody.bip.core.presentation.theme.AppTheme
+import com.ebody.bip.features.schedule.domain.usecase.MarkMedicationTakenUseCase
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class AlarmActivity : ComponentActivity() {
 
+    @Inject
+    lateinit var markMedicationTakenUseCase: MarkMedicationTakenUseCase
     companion object {
         const val ACTION_DISMISS = "com.ebody.bip.ACTION_DISMISS_ALARM"
         private const val TAG = "AlarmDebug"
@@ -82,9 +90,17 @@ class AlarmActivity : ComponentActivity() {
                     label = label,
                     dosage = dosage,
                     onDismiss = {
-                        Log.d(TAG, "Alarm dismissed by UI button. Stopping AlarmService and finishing activity.")
-                        stopService(Intent(this, AlarmService::class.java))
-                        finish()
+                        val reminderId = intent.getLongExtra("REMINDER_ID", -1L)
+                        Log.d(TAG, "AlarmActivity iniciado com Reminder ID: $reminderId")
+                        if (reminderId != -1L) {
+                            lifecycleScope.launch {
+                                markMedicationTakenUseCase(reminderId)
+                                stopService(Intent(this@AlarmActivity, AlarmService::class.java))
+                                finish()
+                            }
+                        } else {
+                            finish()
+                        }
                     }
                 )
             }

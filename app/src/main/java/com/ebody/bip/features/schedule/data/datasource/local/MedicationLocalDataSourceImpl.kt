@@ -1,9 +1,11 @@
 package com.ebody.bip.features.schedule.data.datasource.local
 
+import android.util.Log
 import com.ebody.bip.features.schedule.data.local.MedicationDao
 import com.ebody.bip.features.schedule.data.local.ReminderDao
 import com.ebody.bip.features.schedule.data.mapper.toDomain
 import com.ebody.bip.features.schedule.data.mapper.toEntity
+import com.ebody.bip.features.schedule.data.model.MedicationTakenEntity
 import com.ebody.bip.features.schedule.data.model.ReminderEntity
 import com.ebody.bip.features.schedule.domain.model.Medication
 import com.ebody.bip.features.schedule.domain.model.MedicationReminder
@@ -41,5 +43,14 @@ class MedicationLocalDataSourceImpl @Inject constructor(
 
     override suspend fun insertReminders(reminders: List<ReminderEntity>) {
         reminderDao.insertReminders(reminders)
+    }
+
+    override suspend fun getRemindersStatusBetween(start: Long, end: Long): List<Boolean> {
+        return reminderDao.getRemindersStatusBetween(start, end)
+    }
+
+    override suspend fun insertMedicationLog(log: MedicationTakenEntity) {
+        Log.d("LocalDataSource", "Inserindo log de medicação via DAO. ReminderId: ${log.reminderId}, IsTaken: ${log.isTaken}")
+        reminderDao.insertMedicationLog(log)
     }
 }

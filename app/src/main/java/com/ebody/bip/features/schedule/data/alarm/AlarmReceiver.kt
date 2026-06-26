@@ -40,13 +40,16 @@ class AlarmReceiver : BroadcastReceiver() {
 
                 Log.d(TAG, "ALARM_TRIGGER received. Label: $label, Dosage: $dosage, Time: $time, RequestCode: $requestCode")
 
+                val reminderId = intent.getLongExtra("REMINDER_ID", -1L)
+
                 // Inicia serviço (som + notificação + tela cheia)
                 ContextCompat.startForegroundService(
                     context,
                     Intent(context, AlarmService::class.java).apply {
-                        action = AlarmService.ACTION_NEW_ALARM   // ← adicione esta linha
+                        action = AlarmService.ACTION_NEW_ALARM
                         putExtra("ALARM_LABEL", label)
                         putExtra("ALARM_DOSAGE", dosage)
+                        putExtra("REMINDER_ID", reminderId)
                     }
                 ).also {
                     Log.d(TAG, "Foreground service started successfully from AlarmReceiver.")
@@ -127,6 +130,7 @@ class AlarmReceiver : BroadcastReceiver() {
             putExtra("ALARM_DOSAGE", reminder.dosage)
             putExtra("ALARM_TIME", reminder.time)
             putExtra("REQUEST_CODE", reminder.requestCode)
+            putExtra("REMINDER_ID", reminder.id)
         }.also {
             Log.d(TAG, "Built trigger intent for medicationId: ${reminder.medicationId}")
         }

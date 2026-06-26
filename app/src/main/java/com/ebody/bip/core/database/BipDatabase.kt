@@ -7,6 +7,7 @@ import com.ebody.bip.features.emergency.data.local.ContactEntity
 import com.ebody.bip.features.schedule.data.local.MedicationDao
 import com.ebody.bip.features.schedule.data.model.MedicationEntity
 import com.ebody.bip.features.schedule.data.local.ReminderDao
+import com.ebody.bip.features.schedule.data.model.MedicationTakenEntity
 import com.ebody.bip.features.schedule.data.model.ReminderEntity
 import com.ebody.bip.features.wellbeing.data.datasource.local.MoodDao
 import com.ebody.bip.features.wellbeing.data.model.MoodEntity
@@ -16,8 +17,9 @@ import com.ebody.bip.features.wellbeing.data.model.MoodEntity
         ReminderEntity::class,
         ContactEntity::class,
         MoodEntity::class,
+        MedicationTakenEntity::class
     ],
-    version = 2, exportSchema = false
+    version = 3, exportSchema = false
 )
 abstract class BipDatabase : RoomDatabase() {
     abstract fun moodDao(): MoodDao
