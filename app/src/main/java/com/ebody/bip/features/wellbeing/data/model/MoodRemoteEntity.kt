@@ -5,6 +5,4 @@ data class MoodRemoteEntity(
     val level: Int = 0,
     val notes: String = "",
     val dateTime: Any = ""
-) {
-    constructor() : this(0L, 0, "", "")
-}
+)
