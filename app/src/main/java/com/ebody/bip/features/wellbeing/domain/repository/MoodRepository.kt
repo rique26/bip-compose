@@ -9,4 +9,9 @@ interface MoodRepository {
     fun getMoodHistory(): Flow<List<MoodEntry>>
     suspend fun syncWithRemote()
     suspend fun getMoodsBetween(start: LocalDateTime, end: LocalDateTime): List<MoodEntry>
+
+    /**
+     * Retorna os últimos registros ordenados de forma decrescente (mais recente primeiro).
+     */
+    suspend fun getLastSymptoms(limit: Int): List<MoodEntry>
 }
