@@ -63,6 +63,8 @@ class MedicationScheduleViewModel @Inject constructor(
                     }
                 }
                 onSuccess()
+            } catch (e: Exception) {
+
             } finally {
                 _isSaving.value = false
             }

@@ -37,12 +37,13 @@ class ReminderRepositoryImpl @Inject constructor(
         }
 
         getCurrentUserId()?.let { userId ->
-            Log.d(TAG, "Usuário logado ($userId). Iniciando sincronização remota...")
-            val result = remoteDataSource.syncReminder(userId, savedReminder)
-
-            when (result) {
-                is Result.Success -> Log.i(TAG, "Sincronização remota (Firestore) aceita com sucesso.")
-                is Result.Error -> Log.e(TAG, "Falha na sincronização remota.")
+            try {
+                val result = remoteDataSource.syncReminder(userId, savedReminder)
+                if (result is Result.Error) {
+                    Log.w(TAG, "Sync remoto falhou, mas dado local está salvo.")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Erro inesperado na sincronização remota", e)
             }
         }
     }
