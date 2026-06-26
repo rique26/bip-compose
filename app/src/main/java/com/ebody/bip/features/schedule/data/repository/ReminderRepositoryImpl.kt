@@ -39,23 +39,14 @@ class ReminderRepositoryImpl @Inject constructor(
             reminder
         }
 
-        // Ação Remota: Sincroniza em segundo plano se o usuário estiver logado
-        val userId = getCurrentUserId()
-        if (userId != null) {
+        getCurrentUserId()?.let { userId ->
             Log.d(TAG, "Usuário logado ($userId). Iniciando sincronização remota...")
             val result = remoteDataSource.syncReminder(userId, savedReminder)
 
             when (result) {
-                is Result.Success -> {
-                    Log.i(TAG, "Sincronização remota (Firestore) aceita com sucesso.")
-                }
-                is Result.Error -> {
-                    Log.e(TAG, "Falha na sincronização remota com o Firestore. Dado salvo apenas localmente no Room.")
-                    // TODO: Registrar flag local de pendência de sincronização (sincronizado = false)
-                }
+                is Result.Success -> Log.i(TAG, "Sincronização remota (Firestore) aceita com sucesso.")
+                is Result.Error -> Log.e(TAG, "Falha na sincronização remota.")
             }
-        } else {
-            Log.w(TAG, "Nenhum usuário logado. Sincronização com Firestore ignorada.")
         }
     }
 
@@ -63,17 +54,16 @@ class ReminderRepositoryImpl @Inject constructor(
         getCurrentUserId()?.let { userId ->
             when (val remoteResult = remoteDataSource.fetchAllReminders(userId)) {
                 is Result.Success -> {
-                    localDataSource.insertReminders(remoteResult.data.map { it.toEntity() })
+                    val remoteData = remoteResult.data.map { it.toEntity() }
+                    localDataSource.insertReminders(remoteData)
                 }
-                is Result.Error -> { Log.e(TAG, "Erro ao sincronizar do remoto para local.") }
+                is Result.Error -> Log.e(TAG, "Erro ao sincronizar do remoto para local.")
             }
         }
     }
 
-    override fun getReminders(): Flow<List<MedicationReminder>> = flow {
-        emitAll(localDataSource.getActiveReminders())
-    }.onStart {
-        syncWithRemote()
+    override fun getReminders(): Flow<List<MedicationReminder>> {
+        return localDataSource.getActiveReminders()
     }
 
     override suspend fun deleteReminder(reminder: MedicationReminder) {
