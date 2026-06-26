@@ -5,7 +5,7 @@ import com.ebody.bip.features.emergency.domain.model.EmergencyContact
 
 fun ContactEntity.toDomain(): EmergencyContact {
     return EmergencyContact(
-        id = id.toString(),
+        id = id,
         name = name,
         phoneNumber = phoneNumber,
         isWhatsAppEnabled = isWhatsAppEnabled,
@@ -15,7 +15,7 @@ fun ContactEntity.toDomain(): EmergencyContact {
 
 fun EmergencyContact.toEntity(): ContactEntity {
     return ContactEntity(
-        id = id.toLongOrNull() ?: 0L,
+        id = id,
         name = name,
         phoneNumber = phoneNumber,
         isWhatsAppEnabled = isWhatsAppEnabled,
