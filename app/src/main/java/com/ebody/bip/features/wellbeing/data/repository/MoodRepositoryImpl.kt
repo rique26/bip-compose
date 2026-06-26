@@ -76,4 +76,8 @@ class MoodRepositoryImpl @Inject constructor(
             }
         }
     }
+
+    override suspend fun getLastSymptoms(limit: Int): List<MoodEntry> {
+        return localDataSource.getLastMoods(limit).map { it.toDomain() }
+    }
 }

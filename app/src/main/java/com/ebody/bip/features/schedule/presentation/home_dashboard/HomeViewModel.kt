@@ -57,6 +57,12 @@ class HomeViewModel @Inject constructor(
                     _isRefreshing.update { false }
                 }
             }
+            is HomeDashboardEvent.Logout -> {
+                viewModelScope.launch {
+                    // Aqui você chama seu UseCase de logout/limpeza de sessão
+                    // authRepository.signOut()
+                }
+            }
         }
     }
 }

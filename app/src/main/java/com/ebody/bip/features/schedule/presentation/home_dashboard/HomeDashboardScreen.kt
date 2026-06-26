@@ -32,7 +32,8 @@ fun HomeDashboardScreen(
         },
         onRefresh = {
             viewModel.onEvent(HomeDashboardEvent.Refresh)
-        }
+        },
+        onLogout = { viewModel.onEvent(HomeDashboardEvent.Logout) }
     )
 }
 
@@ -75,7 +76,8 @@ fun PreviewHomeDashboard() {
             onNavigateToEmergency = {},
             onNavigateToMood = {},
             onDeleteReminder = {},
-            onRefresh = {}
+            onRefresh = {},
+            onLogout = {}
         )
     }
 }
