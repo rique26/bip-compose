@@ -76,19 +76,6 @@ class ReminderRepositoryImpl @Inject constructor(
         syncWithRemote()
     }
 
-    // Sincronização Inicial / Pull-to-Refresh
-    suspend fun fetchRemoteRemindersAndSync(): Unit {
-        getCurrentUserId()?.let { userId ->
-            when (val remoteResult = remoteDataSource.fetchAllReminders(userId)) {
-                is Result.Success -> {
-                    localDataSource.insertReminders(remoteResult.data.map { it.toEntity() })
-                }
-                is Result.Error -> {}
-            }
-        }
-    }
-
-    // Exclusão de Lembrete
     override suspend fun deleteReminder(reminder: MedicationReminder) {
         localDataSource.deleteReminder(reminder)
         getCurrentUserId()?.let { userId ->
