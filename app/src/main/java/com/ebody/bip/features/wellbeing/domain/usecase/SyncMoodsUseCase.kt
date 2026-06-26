@@ -6,7 +6,5 @@ import javax.inject.Inject
 class SyncMoodsUseCase @Inject constructor(
     private val repository: MoodRepository
 ) {
-    suspend operator fun invoke() {
-        repository.syncWithRemote()
-    }
+    suspend operator fun invoke() = repository.syncWithRemote()
 }

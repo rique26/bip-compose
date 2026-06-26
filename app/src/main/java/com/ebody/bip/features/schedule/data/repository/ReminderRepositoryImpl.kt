@@ -1,18 +1,15 @@
 package com.ebody.bip.features.schedule.data.repository
 
 import android.util.Log
+import com.ebody.bip.core.domain.util.Result
 import com.ebody.bip.features.auth.domain.repository.SessionManager
 import com.ebody.bip.features.schedule.data.datasource.local.MedicationLocalDataSource
 import com.ebody.bip.features.schedule.data.datasource.remote.MedicationFirebaseDataSource
+import com.ebody.bip.features.schedule.data.mapper.toEntity
 import com.ebody.bip.features.schedule.domain.model.MedicationReminder
 import com.ebody.bip.features.schedule.domain.repository.ReminderRepository
-import com.ebody.bip.core.domain.util.Result
-import com.ebody.bip.features.schedule.data.mapper.toEntity
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 class ReminderRepositoryImpl @Inject constructor(

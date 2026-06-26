@@ -1,12 +1,15 @@
 package com.ebody.bip.features.wellbeing.data.datasource.remote
 
 import android.util.Log
+import com.ebody.bip.core.domain.util.Result
 import com.ebody.bip.features.wellbeing.data.mapper.toDomain
 import com.ebody.bip.features.wellbeing.data.mapper.toRemoteEntity
 import com.ebody.bip.features.wellbeing.data.model.MoodRemoteEntity
 import com.ebody.bip.features.wellbeing.domain.model.MoodEntry
+import com.ebody.bip.features.wellbeing.domain.model.WellbeingError
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 
 class MoodRemoteDataSourceImpl @Inject constructor(
@@ -15,54 +18,52 @@ class MoodRemoteDataSourceImpl @Inject constructor(
 
     companion object {
         private const val TAG = "MoodRemoteDataSource"
+        private const val COLLECTION_USERS = "users"
+        private const val COLLECTION_MOODS = "moods"
+        private const val NETWORK_TIMEOUT = 5000L // 5 segundos de limite
     }
 
-    override suspend fun saveMoodRemote(userId: String, mood: MoodEntry) {
-        val remoteEntity = mood.toRemoteEntity()
-        Log.d(TAG, "Salvando humor remoto para user: $userId com id: ${mood.id}")
+    override suspend fun syncMood(userId: String, mood: MoodEntry) : Result<Unit, WellbeingError> {
+        return try {
+            Log.d(TAG, "Tentando sincronizar no Firestore - UserId: $userId, MoodId: ${mood.id}")
 
-        firestore.collection("users")
-            .document(userId)
-            .collection("moods")
-            .document(mood.id.toString())
-            .set(remoteEntity)
-            .await()
+            val remoteModel = mood.toRemoteEntity()
 
-        Log.d(TAG, "Humor salvo com sucesso no Firestore.")
-    }
+            firestore.collection(COLLECTION_USERS)
+                .document(userId)
+                .collection(COLLECTION_MOODS)
+                .document(mood.id.toString())
+                .set(remoteModel)
+                .await()
 
-    override suspend fun fetchAllMoods(userId: String): List<MoodEntry> {
-        val collectionPath = "users/$userId/moods"
-        Log.d(TAG, "Buscando humores na coleção: $collectionPath")
-
-        val snapshot = firestore.collection("users")
-            .document(userId)
-            .collection("moods")
-            .get()
-            .await()
-
-        Log.d(TAG, "Documentos brutos recuperados: ${snapshot.size()}")
-
-        if (snapshot.isEmpty) {
-            Log.w(TAG, "Nenhum documento encontrado na subcoleção 'moods' para o usuário $userId.")
-            return emptyList()
+            Log.d(TAG, "Sincronização no Firestore realizada com sucesso!")
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "Falha ao sincronizar no Firestore: ${e.message}", e)
+            Result.Error(WellbeingError.Unknown(e.localizedMessage))
         }
+    }
 
-        return snapshot.documents.mapNotNull { doc ->
-            Log.d(TAG, "Processando docId: ${doc.id} -> Dados: ${doc.data}")
-
-            val remoteEntity = doc.toObject(MoodRemoteEntity::class.java)
-            if (remoteEntity == null) {
-                Log.e(TAG, "Falha ao converter documento ${doc.id} para MoodRemoteEntity!")
+    override suspend fun fetchAllMoods(userId: String): Result<List<MoodEntry>, WellbeingError> {
+        return try {
+            Log.d(TAG, "Buscando todos os registros do Firestore para UserId: $userId")
+            val snapshot = withTimeout(NETWORK_TIMEOUT) {
+                firestore.collection(COLLECTION_USERS)
+                    .document(userId)
+                    .collection(COLLECTION_MOODS)
+                    .get()
+                    .await()
             }
 
-            remoteEntity?.toDomain(doc.id).also { domainModel ->
-                if (domainModel == null) {
-                    Log.e(TAG, "Mapeamento para domínio falhou (null) no docId: ${doc.id}")
-                } else {
-                    Log.d(TAG, "Mapeado com sucesso para domínio: $domainModel")
-                }
+            val moods = snapshot.documents.mapNotNull { doc ->
+                doc.toObject(MoodRemoteEntity::class.java)?.toDomain()
             }
+
+            Log.d(TAG, "Busca no Firestore retornou ${moods.size} registros.")
+            Result.Success(moods)
+        } catch (e: Exception) {
+            Log.e(TAG, "Falha ao buscar todos do Firestore: ${e.message}", e)
+            Result.Error(WellbeingError.Unknown(e.localizedMessage))
         }
     }
 }
