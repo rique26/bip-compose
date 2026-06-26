@@ -7,6 +7,7 @@ interface ReminderRepository {
     suspend fun saveReminder(reminder: MedicationReminder)
     suspend fun deleteReminder(reminder: MedicationReminder)
     fun getReminders(): Flow<List<MedicationReminder>>
+    suspend fun syncWithRemote()
 
 }
 

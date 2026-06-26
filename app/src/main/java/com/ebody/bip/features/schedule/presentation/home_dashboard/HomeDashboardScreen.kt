@@ -19,14 +19,19 @@ fun HomeDashboardScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
 
     HomeDashboardContent(
         uiState = uiState,
+        isRefreshing = isRefreshing,
         onNavigateToMedicationSelection = onNavigateToMedicationSelection,
         onNavigateToEmergency = onNavigateToEmergency,
         onNavigateToMood = onNavigateToMood,
         onDeleteReminder = { reminder ->
             viewModel.onEvent(HomeDashboardEvent.DeleteReminder(reminder))
+        },
+        onRefresh = {
+            viewModel.onEvent(HomeDashboardEvent.Refresh)
         }
     )
 }
@@ -65,10 +70,12 @@ fun PreviewHomeDashboard() {
     MaterialTheme {
         HomeDashboardContent(
             uiState = HomeDashboardUiState(reminders = mockReminders),
+            isRefreshing = false,
             onNavigateToMedicationSelection = {},
             onNavigateToEmergency = {},
             onNavigateToMood = {},
-            onDeleteReminder = {}
+            onDeleteReminder = {},
+            onRefresh = {}
         )
     }
 }

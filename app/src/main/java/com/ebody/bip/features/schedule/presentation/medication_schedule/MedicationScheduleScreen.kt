@@ -26,6 +26,8 @@ fun MedicationScheduleScreen(
     }
 
     val medications by viewModel.medications.collectAsState()
+    val isSaving by viewModel.isSaving.collectAsState()
+
     val scheduleTimes = remember { mutableStateListOf(Pair(8, 0)) }
     var dosage by remember { mutableStateOf("") }
 
@@ -44,11 +46,13 @@ fun MedicationScheduleScreen(
         showTimePicker = showTimePicker,
         onBack = onBack,
         onSaveClick = {
-            if (dosage.isNotBlank()) {
+            if (dosage.isNotBlank() && !isSaving) {
                 viewModel.saveReminders(
                     scheduleTimes = scheduleTimes,
                     dosage = dosage,
-                    onSuccess = onFinish
+                    onSuccess = {
+                        onFinish()
+                    }
                 )
             }
         },
