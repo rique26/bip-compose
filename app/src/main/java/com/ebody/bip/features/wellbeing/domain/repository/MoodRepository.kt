@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.Flow
 import java.time.LocalDateTime
 
 interface MoodRepository {
-    suspend fun saveMood(mood: MoodEntry)
+    suspend fun saveMood(mood: MoodEntry): MoodEntry
     fun getMoodHistory(): Flow<List<MoodEntry>>
     suspend fun syncWithRemote()
     suspend fun getMoodsBetween(start: LocalDateTime, end: LocalDateTime): List<MoodEntry>
