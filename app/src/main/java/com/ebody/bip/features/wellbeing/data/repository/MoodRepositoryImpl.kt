@@ -32,9 +32,11 @@ class MoodRepositoryImpl @Inject constructor(
         return sessionManager.getUserSession().firstOrNull()?.userId
     }
 
-    override suspend fun saveMood(mood: MoodEntry) {
+    override suspend fun saveMood(mood: MoodEntry): MoodEntry {
         Log.d(TAG, "Salvando registro localmente (Room)...")
-        val insertedId = localDataSource.insertMood(mood)
+
+        val entity = mood.toEntity()
+        val insertedId = localDataSource.insertMood(entity)
 
         val savedMood = if (mood.id == 0L && insertedId > 0) {
             mood.copy(id = insertedId)
@@ -43,14 +45,10 @@ class MoodRepositoryImpl @Inject constructor(
         }
 
         getCurrentUserId()?.let { userId ->
-            Log.d(TAG, "Usuário logado ($userId). Iniciando sincronização remota...")
-            val result = remoteDataSource.syncMood(userId, savedMood)
-
-            when (result) {
-                is Result.Success -> Log.i(TAG, "Sincronização remota (Firestore) aceita com sucesso.")
-                is Result.Error -> Log.e(TAG, "Falha na sincronização remota.")
-            }
+            remoteDataSource.syncMood(userId, savedMood)
         }
+
+        return savedMood
     }
 
     override fun getMoodHistory(): Flow<List<MoodEntry>> {

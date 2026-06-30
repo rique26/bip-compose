@@ -56,6 +56,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.text.google.fonts)
     implementation(platform(libs.androidx.compose.bom))
 
+
     // Compose e Material
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
@@ -84,6 +85,9 @@ dependencies {
     // Coroutines Play Services
     implementation(libs.kotlinx.coroutines.play.services)
 
+    // Serialization
+    implementation(libs.kotlinx.serialization.json)
+
     // Datastore e Security
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.security.crypto)
@@ -100,6 +104,9 @@ dependencies {
 
     // Lottie Animation Compose
     implementation(libs.lottie.compose)
+
+    // MediaPipe LLM Inference
+    implementation(libs.mediapipe.tasks.genai)
 
     // Desugaring
     coreLibraryDesugaring(libs.desugar.jdk.libs)
