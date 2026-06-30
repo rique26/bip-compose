@@ -17,7 +17,7 @@ class LlmInferenceEngineImpl @Inject constructor(
         LlmInference.createFromOptions(
             context,
             LlmInference.LlmInferenceOptions.builder()
-                .setModelPath("gemma3-1b-it-int4.bin")
+//                .setModelPath("gemma3-1b-it-int4.bin")
                 .setMaxTokens(512)
                 .setTopK(40)
                 .setTemperature(0.2f)
