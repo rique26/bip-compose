@@ -10,8 +10,8 @@ class MoodLocalDataSourceImpl @Inject constructor(
     private val moodDao: MoodDao
 ) : MoodLocalDataSource {
 
-    override suspend fun insertMood(mood: MoodEntry): Long {
-        return moodDao.insertMood(mood.toEntity())
+    override suspend fun insertMood(mood: MoodEntity): Long {
+        return moodDao.insertMood(mood)
     }
 
     override suspend fun insertMoods(moods: List<MoodEntity>) {
