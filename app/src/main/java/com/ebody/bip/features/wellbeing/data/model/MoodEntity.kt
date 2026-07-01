@@ -8,7 +8,7 @@ import com.ebody.bip.core.domain.intelligence.model.RiskLevel
 data class MoodEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    val level: Int,
+    val level: Int?,
     val notes: String,
     val timestamp: String,
     val riskLevel: String = RiskLevel.ESTAVEL.name,

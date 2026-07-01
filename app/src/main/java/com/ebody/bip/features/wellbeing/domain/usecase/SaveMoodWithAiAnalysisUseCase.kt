@@ -17,33 +17,33 @@ class SaveMoodWithAiAnalysisUseCase @Inject constructor(
         private const val TAG = "SaveMoodWithAiUseCase"
     }
 
-    suspend operator fun invoke(moodEntry: MoodEntry): MoodEntry {
-        Log.d(TAG, "Processando análise de risco via IA...")
-
-        // 1. Delega para a camada de infraestrutura a execução da IA
-        val analysisResult = intelligenceRepository.analyzeSymptomRisk(moodEntry)
-
-        // 2. Regra de Negócio/Orquestração: Enriquecimento do Modelo
-        var enrichedEntry = moodEntry
-
-        analysisResult.onSuccess { analysis ->
-            Log.d(TAG, "Inferência concluída. Risco: ${analysis.riskLevel}")
-            enrichedEntry = enrichedEntry.copy(
-                riskLevel = analysis.riskLevel,
-                aiInstruction = analysis.instruction
-            )
+    suspend operator fun invoke(moodEntry: MoodEntry): Result<MoodEntry, Exception> {
+        if (moodEntry.level == null) {
+            return Result.Error(IllegalArgumentException("Selecione um nível de humor"))
         }
 
-        // Fallback elegante caso o Gemma estoure memória ou falhe localmente
-        if (analysisResult is Result.Error) {
-            Log.w(TAG, "Falha na IA. Aplicando fallback de segurança.", analysisResult.error)
-            enrichedEntry = enrichedEntry.copy(
-                riskLevel = RiskLevel.ESTAVEL,
-                aiInstruction = "Registro salvo com sucesso. Em caso de dúvidas, consulte seu médico."
-            )
-        }
+        return try {
+            val analysisResult = intelligenceRepository.analyzeSymptomRisk(moodEntry)
 
-        // Retorna o objeto completo que foi salvo (com ID do Room + dados da IA)
-        return moodRepository.saveMood(enrichedEntry)
+            if (analysisResult is Result.Error) {
+                Log.w(TAG, "Falha na análise de IA. Operação abortada para proteger o histórico.")
+                return Result.Error(analysisResult.error)
+            }
+
+            var enrichedEntry = moodEntry
+
+            // Usando sua própria DSL funcional de forma limpa
+            analysisResult.onSuccess { analysis ->
+                enrichedEntry = enrichedEntry.copy(
+                    riskLevel = analysis.riskLevel,
+                    aiInstruction = analysis.instruction
+                )
+            }
+
+            val savedEntry = moodRepository.saveMood(enrichedEntry)
+            Result.Success(savedEntry)
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
     }
 }
