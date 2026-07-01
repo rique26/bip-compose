@@ -1,6 +1,5 @@
 package com.ebody.bip.core.data.intelligence.repository
 
-import android.util.Log
 import com.ebody.bip.core.data.intelligence.AiAnalysisDto
 import com.ebody.bip.core.domain.intelligence.model.RiskAnalysis
 import com.ebody.bip.core.domain.intelligence.model.RiskLevel
@@ -29,18 +28,15 @@ class ClinicalIntelligenceRepositoryImpl @Inject constructor(
             """.trimIndent()
 
             val userPrompt = "Humor Level: ${moodEntry.level}. Notas: ${moodEntry.notes}"
-            Log.d(TAG, "Enviando prompt para Gemma no dispositivo. User: $userPrompt")
 
-            // Executa a inferência real no dispositivo
+            // Executa a inferência
             val rawResponse = llmEngine.generateResponse(systemPrompt, userPrompt)
-            Log.d(TAG, "Resposta bruta IA: $rawResponse")
 
             val dto = Json.decodeFromString<AiAnalysisDto>(rawResponse)
             val risk = runCatching { RiskLevel.valueOf(dto.riskLevel) }.getOrDefault(RiskLevel.ESTAVEL)
 
             Result.Success(RiskAnalysis(riskLevel = risk, instruction = dto.instruction))
         } catch (e: Exception) {
-            Log.e(TAG, "Erro durante inferência da IA no dispositivo.", e)
             Result.Error(e)
         }
     }
