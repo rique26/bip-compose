@@ -8,6 +8,10 @@ plugins {
     alias(libs.plugins.google.services)
 }
 
+dependencyLocking {
+    lockAllConfigurations()
+}
+
 android {
     namespace = "com.ebody.bip"
     compileSdk = 36
@@ -23,8 +27,16 @@ android {
     }
 
     buildTypes {
-        release {
+        debug {
+            manifestPlaceholders["appLabel"] = "Bip (Debug)"
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
             isMinifyEnabled = false
+        }
+        release {
+            signingConfig = signingConfigs.getByName("debug")
+            manifestPlaceholders["appLabel"] = "Bip"
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -113,6 +125,8 @@ dependencies {
 
     // Testes e Debug
     testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
@@ -120,3 +134,4 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
+
