@@ -1,6 +1,5 @@
 package com.ebody.bip.features.wellbeing.domain.usecase
 
-import android.util.Log
 import com.ebody.bip.core.domain.intelligence.model.RiskLevel
 import com.ebody.bip.core.domain.util.Result
 import com.ebody.bip.core.domain.util.onSuccess
@@ -18,7 +17,6 @@ class SaveMoodWithAiAnalysisUseCase @Inject constructor(
     }
 
     suspend operator fun invoke(moodEntry: MoodEntry): MoodEntry {
-        Log.d(TAG, "Processando análise de risco via IA...")
 
         // 1. Delega para a camada de infraestrutura a execução da IA
         val analysisResult = intelligenceRepository.analyzeSymptomRisk(moodEntry)
@@ -27,7 +25,6 @@ class SaveMoodWithAiAnalysisUseCase @Inject constructor(
         var enrichedEntry = moodEntry
 
         analysisResult.onSuccess { analysis ->
-            Log.d(TAG, "Inferência concluída. Risco: ${analysis.riskLevel}")
             enrichedEntry = enrichedEntry.copy(
                 riskLevel = analysis.riskLevel,
                 aiInstruction = analysis.instruction
@@ -36,7 +33,6 @@ class SaveMoodWithAiAnalysisUseCase @Inject constructor(
 
         // Fallback elegante caso o Gemma estoure memória ou falhe localmente
         if (analysisResult is Result.Error) {
-            Log.w(TAG, "Falha na IA. Aplicando fallback de segurança.", analysisResult.error)
             enrichedEntry = enrichedEntry.copy(
                 riskLevel = RiskLevel.ESTAVEL,
                 aiInstruction = "Registro salvo com sucesso. Em caso de dúvidas, consulte seu médico."
