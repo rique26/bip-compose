@@ -39,11 +39,31 @@ class FakeLlmInferenceEngineImpl @Inject constructor() : LlmInferenceEngine {
             """.trimIndent()
 
         } else {
+            // Analisa o que o usuário digitou nas notas para simular uma resposta sob medida
+            val userNotes = userPrompt.lowercase()
 
-            // Retorno completando o JSON para a análise diária de risco (SaveMoodWithAiAnalysisUseCase)
+            val (riskLevel, instruction) = when {
+                userNotes.contains("esqueci") || userNotes.contains("remédio") || userNotes.contains("remedio") -> {
+                    "ALERTA" to "Identifiquei uma quebra na sua rotina de medicação. Tente vincular o alarme do Bip a um hábito fixo, como escovar os dentes, para evitar novos esquecimentos."
+                }
+                userNotes.contains("cansado") || userNotes.contains("sono") || userNotes.contains("dormi") -> {
+                    "ALERTA" to "O cansaço acumulado impacta diretamente seu bem-estar. Que tal priorizar uma higiene do sono hoje? Evite telas 30 minutos antes de deitar."
+                }
+                userNotes.contains("triste") || userNotes.contains("ansioso") || userNotes.contains("ansiedade") -> {
+                    "CRITICO" to "Notei uma oscilação mais intensa no seu relato. Lembre-se de respirar fundo, focar no momento presente e, se precisar, procurar sua rede de apoio ou profissional."
+                }
+                userNotes.contains("estressado") || userNotes.contains("faculdade") || userNotes.contains("prova") -> {
+                    "ALERTA" to "A rotina acadêmica pode ser exaustiva. Divida suas tarefas em blocos menores e faça pausas de 5 minutos a cada hora para descompressão."
+                }
+                else -> {
+                    "ESTAVEL" to "Excelente registro! Seu padrão de humor demonstra estabilidade clínica. Continue mantendo a consistência nos horários e autocuidado."
+                }
+            }
+
             """
-            "ALERTA",
-              "instruction": "Percebi que o relato de cefaleia coincidiu com sua queixa de privação de sono. Evite telas à noite e tome o medicamento no horário regular."
+            {
+              "riskLevel": "$riskLevel",
+              "instruction": "$instruction"
             }
             """.trimIndent()
         }

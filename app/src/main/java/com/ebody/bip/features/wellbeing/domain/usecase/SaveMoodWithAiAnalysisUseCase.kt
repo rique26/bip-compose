@@ -39,9 +39,9 @@ class SaveMoodWithAiAnalysisUseCase @Inject constructor(
                     )
                 }
             }
-            val savedEntry = moodRepository.saveMood(enrichedEntry)
-            Result.Success(savedEntry)
 
+            moodRepository.saveMood(enrichedEntry)
+            Result.Success(enrichedEntry)
         } catch (e: Exception) {
             Result.Error(e)
         }

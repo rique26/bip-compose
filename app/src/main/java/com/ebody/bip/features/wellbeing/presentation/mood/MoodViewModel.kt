@@ -55,8 +55,8 @@ class MoodViewModel @Inject constructor(
                         it.copy(
                             isSaving = false,
                             isSavedSuccessfully = true,
-                            selectedMood = null,
-                            notes = "",
+                            selectedMood = currentState.selectedMood,
+                            notes = currentState.notes,
                             aiInstruction = savedEntry.aiInstruction,
                             mascotExpression = savedEntry.riskLevel.toMascotExpression()
                         )
