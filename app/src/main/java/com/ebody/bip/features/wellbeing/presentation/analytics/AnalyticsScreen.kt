@@ -18,6 +18,8 @@ fun AnalyticsScreen(
         AnalyticsContent(
             uiState = uiState,
             onFilterSelected = viewModel::loadMetrics,
+            onGenerateSummary = viewModel::generateClinicalSummary,
+            onClearSummary = viewModel::clearClinicalSummary,
             modifier = Modifier.padding(paddingValues)
         )
     }
