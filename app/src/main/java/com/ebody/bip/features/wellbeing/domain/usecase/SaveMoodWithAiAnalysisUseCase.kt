@@ -1,10 +1,9 @@
 package com.ebody.bip.features.wellbeing.domain.usecase
 
-import android.util.Log
 import com.ebody.bip.core.domain.intelligence.model.RiskLevel
+import com.ebody.bip.core.domain.intelligence.repository.ClinicalIntelligenceRepository
 import com.ebody.bip.core.domain.util.Result
 import com.ebody.bip.core.domain.util.onSuccess
-import com.ebody.bip.features.intelligence.domain.repository.ClinicalIntelligenceRepository
 import com.ebody.bip.features.wellbeing.domain.model.MoodEntry
 import com.ebody.bip.features.wellbeing.domain.repository.MoodRepository
 import javax.inject.Inject

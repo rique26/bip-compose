@@ -47,12 +47,6 @@ class LlmInferenceEngineImpl @Inject constructor(
             val start = System.currentTimeMillis()
 
             val modelPath = getModelPath()
-            val modelFile = File(modelPath)
-
-            Log.i(TAG, "Model path = ${modelFile.absolutePath}")
-            Log.i(TAG, "Model exists = ${modelFile.exists()}")
-            Log.i(TAG, "Model size = ${modelFile.length()} bytes")
-            Log.i(TAG, "Model size = ${modelFile.length() / 1024 / 1024} MB")
 
             Log.i(TAG, "Criando LlmInferenceOptions...")
 
@@ -60,19 +54,12 @@ class LlmInferenceEngineImpl @Inject constructor(
                 .setModelPath(modelPath)
                 .build()
 
-            Log.i(TAG, "Options criadas com sucesso.")
-
-            Log.i(TAG, "Chamando createFromOptions()...")
-
             llmInference = LlmInference.createFromOptions(
                 context,
                 options
             )
 
-            Log.i(
-                TAG,
-                "LLM inicializado em ${System.currentTimeMillis() - start} ms"
-            )
+            Log.i(TAG, "LLM inicializado em ${System.currentTimeMillis() - start} ms")
 
         } catch (t: Throwable) {
             Log.e(TAG, "Falha ao inicializar LLM", t)
@@ -93,16 +80,30 @@ class LlmInferenceEngineImpl @Inject constructor(
         val engine = llmInference
             ?: throw IllegalStateException("LLM não inicializado.")
 
-        val prompt = """
-<start_of_turn>system
-$systemPrompt
-<end_of_turn>
-<start_of_turn>user
-$userPrompt
-<end_of_turn>
-<start_of_turn>model
-{ "riskLevel": 
-""".trimIndent()
+        // Verifica qual o tipo de resposta esperado para montar o prompt correto
+        val prompt = if (systemPrompt.contains("RESUMO CLÍNICO DE ACOMPANHAMENTO")) {
+            """
+            <start_of_turn>system
+            $systemPrompt
+            <end_of_turn>
+            <start_of_turn>user
+            $userPrompt
+            <end_of_turn>
+            <start_of_turn>model
+            """.trimIndent()
+        } else {
+            // Prompt da análise de risco
+            """
+            <start_of_turn>system
+            $systemPrompt
+            <end_of_turn>
+            <start_of_turn>user
+            $userPrompt
+            <end_of_turn>
+            <start_of_turn>model
+            { "riskLevel": 
+            """.trimIndent()
+        }
 
         Log.i(TAG, "Gerando resposta...")
 

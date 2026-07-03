@@ -1,5 +1,6 @@
 package com.ebody.bip.features.wellbeing.domain.usecase
 
+import com.ebody.bip.features.wellbeing.domain.model.MoodEntry
 import com.ebody.bip.features.wellbeing.domain.repository.MoodRepository
 import com.ebody.bip.features.wellbeing.presentation.analytics.AnalyticsTimeFilter
 import java.time.LocalDateTime
@@ -20,15 +21,13 @@ class GetAnalyticsMetricsUseCase @Inject constructor(
         val entries = repository.getMoodsBetween(start, end)
 
         val translatedEntries = entries.map { entry ->
-            val moodName = when (entry.level) {
+            when (entry.level) {
                 1 -> "Mal"
                 2 -> "Estranho"
                 3 -> "Bem"
                 4 -> "Ótimo"
                 else -> "Desconhecido"
             }
-            // Retorna um modelo leve ou apenas a string traduzida para o agrupamento
-            moodName
         }
 
         // Cálculo de frequência e média
@@ -36,8 +35,18 @@ class GetAnalyticsMetricsUseCase @Inject constructor(
         val total = entries.size
         val average = counts.maxByOrNull { it.value }?.key ?: "N/A"
 
-        return AnalyticsResult(total, average, counts)
+        return AnalyticsResult(
+            total = total,
+            average = average,
+            counts = counts,
+            records = entries
+        )
     }
 }
 
-data class AnalyticsResult(val total: Int, val average: String, val counts: Map<String, Int>)
+data class AnalyticsResult(
+    val total: Int,
+    val average: String,
+    val counts: Map<String, Int>,
+    val records: List<MoodEntry>
+)

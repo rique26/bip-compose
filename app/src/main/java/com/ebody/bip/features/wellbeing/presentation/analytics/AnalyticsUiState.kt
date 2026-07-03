@@ -7,7 +7,9 @@ sealed interface AnalyticsUiState {
         val averageMood: String,
         val chartItems: List<ChartItem>,
         val selectedFilter: AnalyticsTimeFilter,
-        val isChartLoading: Boolean = false
+        val isChartLoading: Boolean = false,
+        val isGeneratingSummary: Boolean = false,
+        val clinicalSummary: String? = null
     ) : AnalyticsUiState
 
     data class Error(val message: String) : AnalyticsUiState
