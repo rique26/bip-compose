@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -35,6 +36,12 @@ fun MoodScreen(
     val timeFormatter = remember { DateTimeFormatter.ofPattern("HH:mm") }
 
     var showDialog by remember { mutableStateOf(false) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.onEvent(MoodEvent.ResetSinks)
+        }
+    }
 
     if (showDialog) {
         WellbeingLevelsDialog(onDismiss = { showDialog = false })
