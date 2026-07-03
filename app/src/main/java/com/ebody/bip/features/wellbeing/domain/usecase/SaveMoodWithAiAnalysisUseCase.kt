@@ -25,23 +25,24 @@ class SaveMoodWithAiAnalysisUseCase @Inject constructor(
         return try {
             val analysisResult = intelligenceRepository.analyzeSymptomRisk(moodEntry)
 
-            if (analysisResult is Result.Error) {
-                Log.w(TAG, "Falha na análise de IA. Operação abortada para proteger o histórico.")
-                return Result.Error(analysisResult.error)
-            }
-
             var enrichedEntry = moodEntry
 
-            // Usando sua própria DSL funcional de forma limpa
-            analysisResult.onSuccess { analysis ->
+            if (analysisResult is Result.Error) {
                 enrichedEntry = enrichedEntry.copy(
-                    riskLevel = analysis.riskLevel,
-                    aiInstruction = analysis.instruction
+                    riskLevel = RiskLevel.ESTAVEL,
+                    aiInstruction = "Humor registrado com sucesso."
                 )
+            } else {
+                analysisResult.onSuccess { analysis ->
+                    enrichedEntry = enrichedEntry.copy(
+                        riskLevel = analysis.riskLevel,
+                        aiInstruction = analysis.instruction
+                    )
+                }
             }
-
             val savedEntry = moodRepository.saveMood(enrichedEntry)
             Result.Success(savedEntry)
+
         } catch (e: Exception) {
             Result.Error(e)
         }

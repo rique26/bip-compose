@@ -39,7 +39,7 @@ android {
     }
 
     androidResources {
-        noCompress.add("bin")
+        noCompress.addAll(listOf("task", "bin", "litertlm"))
     }
     defaultConfig {
         multiDexEnabled = true
@@ -115,8 +115,7 @@ dependencies {
     // Lottie Animation Compose
     implementation(libs.lottie.compose)
 
-    // MediaPipe LLM Inference
-    implementation(libs.mediapipe.tasks.genai)
+    implementation(libs.mediapipe.genai)
 
     // Desugaring
     coreLibraryDesugaring(libs.desugar.jdk.libs)
