@@ -82,8 +82,6 @@ fun MoodScreen(
     LaunchedEffect(state.isSavedSuccessfully) {
         if (state.isSavedSuccessfully) {
             Toast.makeText(context, "Registro salvo com sucesso!", Toast.LENGTH_SHORT).show()
-            viewModel.onEvent(MoodEvent.ResetSinks)
-            onBackClick()
         }
     }
 

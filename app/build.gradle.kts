@@ -38,6 +38,9 @@ android {
         }
     }
 
+    androidResources {
+        noCompress.add("bin")
+    }
     defaultConfig {
         multiDexEnabled = true
     }
