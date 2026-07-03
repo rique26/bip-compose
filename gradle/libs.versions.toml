@@ -28,11 +28,11 @@ hiltCommon = "1.3.0"
 hiltWork = "1.2.0"
 playServicesLocation = "21.3.0"
 lottieCompose = "6.6.0"
-mediapipeLlm = "0.10.14"
 mockk = "1.13.12"
 kotlinxCoroutinesTest = "1.9.0"
 androidxTestCore = "1.6.1"
 robolectric = "4.11.1"
+mediapipeGenai = "0.10.28"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -88,8 +88,7 @@ androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = 
 # Lottie
 lottie-compose = { group = "com.airbnb.android", name = "lottie-compose", version.ref = "lottieCompose" }
 
-# Mediapipe LLM
-mediapipe-tasks-genai = { group = "com.google.mediapipe", name = "tasks-genai", version.ref = "mediapipeLlm" }
+mediapipe-genai = { group = "com.google.mediapipe", name = "tasks-genai", version.ref = "mediapipeGenai" }
 
 # Tests
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }

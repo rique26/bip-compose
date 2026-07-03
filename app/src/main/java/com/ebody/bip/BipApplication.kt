@@ -6,8 +6,12 @@ import androidx.work.Configuration
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.ebody.bip.core.domain.intelligence.repository.LlmInferenceEngine
 import com.ebody.bip.features.schedule.data.alarm.AlarmWatchdogWorker
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -16,6 +20,8 @@ class BipApplication : Application(), Configuration.Provider {
 
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
+    @Inject
+    lateinit var llmEngine: LlmInferenceEngine
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
@@ -37,5 +43,11 @@ class BipApplication : Application(), Configuration.Provider {
             ExistingPeriodicWorkPolicy.KEEP,
             watchdog
         )
+    }
+
+    private fun preloadAiEngine() {
+        CoroutineScope(Dispatchers.IO).launch {
+            llmEngine.initialize()
+        }
     }
 }
