@@ -18,12 +18,12 @@ jobs:
 
       - name: Inject Google Services JSON
         env:
-          DATA: ${{ secrets.GOOGLE_SERVICES_JSON }}
+          GOOGLE_SERVICES_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
           mkdir -p app/src/debug
           mkdir -p app/src/release
-          echo "$DATA" | base64 -di > app/src/debug/google-services.json
-          echo "$DATA" | base64 -di > app/src/release/google-services.json
+          echo -n "$GOOGLE_SERVICES_BASE64" | base64 -d > app/src/debug/google-services.json
+          echo -n "$GOOGLE_SERVICES_BASE64" | base64 -d > app/src/release/google-services.json
 
       - name: Build debug APK
         run: chmod +x ./gradlew && ./gradlew assembleDebug
