@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.ebody.bip.features.schedule.data.model.ReminderEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -14,7 +15,10 @@ interface ContactDao {
     fun getAllContacts(): Flow<List<ContactEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertContact(contact: ContactEntity)
+    suspend fun insertContact(contact: ContactEntity): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertContacts(contacts: List<ContactEntity>)
 
     @Delete
     suspend fun deleteContact(contact: ContactEntity)
