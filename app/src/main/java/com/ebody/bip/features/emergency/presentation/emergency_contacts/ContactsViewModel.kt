@@ -29,7 +29,7 @@ class ContactsViewModel @Inject constructor(
     private val toggleWhatsAppUseCase: ToggleWhatsAppUseCase,
     private val toggleSmsUseCase: ToggleSmsUseCase,
     private val deleteContactUseCase: DeleteContactUseCase,
-    private val saveEmergencyContactUseCase: SaveEmergencyContactUseCase
+    private val saveEmergencyContactUseCase: SaveEmergencyContactUseCase,
     private val syncContactsUseCase: SyncRemindersUseCase
 ) : ViewModel() {
 
@@ -70,20 +70,20 @@ class ContactsViewModel @Inject constructor(
             is ContactsEvent.Refresh -> {
                 viewModelScope.launch {
                     _isRefreshing.update { true }
-                    syncRemindersUseCase()
+//                    syncRemindersUseCase()
                     _isRefreshing.update { false }
                 }
             }
             is ContactsEvent.SaveContact -> {
                 viewModelScope.launch {
-                    val newContact = EmergencyContact(
-                        id = "0L",
-                        name = event.name,
-                        phoneNumber = event.phoneNumber,
-                        isWhatsAppEnabled = false,
-                        isSmsEnabled = false
-                    )
-                    saveEmergencyContactUseCase(newContact)
+//                    val newContact = EmergencyContact(
+//                        id = "0L",
+//                        name = event.name,
+//                        phoneNumber = event.phoneNumber,
+//                        isWhatsAppEnabled = false,
+//                        isSmsEnabled = false
+//                    )
+//                    saveEmergencyContactUseCase(newContact)
                 }
             }
         }

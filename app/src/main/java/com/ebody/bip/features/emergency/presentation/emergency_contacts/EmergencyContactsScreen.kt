@@ -162,11 +162,11 @@ fun EmergencyContactsScreen(
                 items = uiState.contacts,
                 key = { it.id }
             ) { contact ->
-                ContactItem(
-                    contact = contact,
-                    onToggleWhatsApp = { viewModel.onEvent(ContactsEvent.ToggleWhatsApp(contact.id)) },
-                    onToggleSms = { viewModel.onEvent(ContactsEvent.ToggleSms(contact.id)) }
-                )
+//                ContactItem(
+//                    contact = contact,
+//                    onToggleWhatsApp = { viewModel.onEvent(ContactsEvent.ToggleWhatsApp(contact.id)) },
+//                    onToggleSms = { viewModel.onEvent(ContactsEvent.ToggleSms(contact.id)) }
+//                )
             }
         }
     }
