@@ -3,8 +3,6 @@ package com.ebody.bip.features.wellbeing.data.repository
 import android.util.Log
 import com.ebody.bip.core.domain.util.Result
 import com.ebody.bip.features.auth.domain.repository.SessionManager
-import com.ebody.bip.features.schedule.data.mapper.toEntity
-import com.ebody.bip.features.schedule.data.repository.ReminderRepositoryImpl
 import com.ebody.bip.features.wellbeing.data.datasource.local.MoodLocalDataSource
 import com.ebody.bip.features.wellbeing.data.datasource.remote.MoodRemoteDataSource
 import com.ebody.bip.features.wellbeing.data.mapper.toDomain
@@ -16,7 +14,6 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import java.time.LocalDateTime
 import javax.inject.Inject
-import kotlin.collections.map
 
 class MoodRepositoryImpl @Inject constructor(
     private val localDataSource: MoodLocalDataSource,
@@ -33,8 +30,6 @@ class MoodRepositoryImpl @Inject constructor(
     }
 
     override suspend fun saveMood(mood: MoodEntry): MoodEntry {
-        Log.d(TAG, "Salvando registro localmente (Room)...")
-
         val entity = mood.toEntity()
         val insertedId = localDataSource.insertMood(entity)
 

@@ -8,6 +8,7 @@ import com.ebody.bip.features.wellbeing.domain.usecase.SaveMoodWithAiAnalysisUse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import com.ebody.bip.core.domain.util.Result
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -23,50 +24,23 @@ class MoodViewModel @Inject constructor(
 
     fun onEvent(event: MoodEvent) {
         when (event) {
-            is MoodEvent.SelectMood -> {
-                _uiState.update { it.copy(selectedMood = event.mood) }
-            }
+            is MoodEvent.SelectMood -> { _uiState.update { it.copy(selectedMood = event.mood) } }
 
-            is MoodEvent.UpdateNotes -> {
-                _uiState.update { it.copy(notes = event.notes) }
-            }
+            is MoodEvent.UpdateNotes -> { _uiState.update { it.copy(notes = event.notes) } }
 
-            is MoodEvent.UpdateDateTime -> {
-                _uiState.update { it.copy(currentDateTime = event.dateTime) }
-            }
+            is MoodEvent.UpdateDateTime -> { _uiState.update { it.copy(currentDateTime = event.dateTime) } }
 
-            is MoodEvent.SaveMood -> {
-                saveMoodRecord()
-            }
+            is MoodEvent.SaveMood -> { saveMoodRecord() }
 
-            is MoodEvent.ResetSinks -> {
-                _uiState.update {
-                    it.copy(
-                        isSavedSuccessfully = false,
-                        errorMessage = null,
-                        aiInstruction = "",
-                        mascotExpression = MascotExpression.NORMAL
-                    )
-                }
-            }
+            is MoodEvent.ResetSinks -> resetUiState()
         }
     }
 
     private fun saveMoodRecord() {
+        val currentState = _uiState.value
+
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true) }
-
-            val currentState = _uiState.value
-
-            if (currentState.selectedMood == null) {
-                _uiState.update {
-                    it.copy(
-                        isSaving = false,
-                        errorMessage = "Selecione um nível de humor"
-                    )
-                }
-                return@launch
-            }
 
             val moodEntry = MoodEntry(
                 level = currentState.selectedMood,
@@ -74,35 +48,40 @@ class MoodViewModel @Inject constructor(
                 dateTime = currentState.currentDateTime
             )
 
-            val result = runCatching {
-                saveMoodWithAiAnalysisUseCase(moodEntry)
-            }
-
-            result.onSuccess { savedEntry: MoodEntry ->
-                val expression = when (savedEntry.riskLevel) {
-                    RiskLevel.ALERTA -> MascotExpression.CONCERNED
-                    RiskLevel.CRITICO -> MascotExpression.CRITICAL
-                    else -> MascotExpression.NORMAL
+            when (val result = saveMoodWithAiAnalysisUseCase(moodEntry)) {
+                is Result.Success -> {
+                    val savedEntry = result.data
+                    _uiState.update {
+                        it.copy(
+                            isSaving = false,
+                            isSavedSuccessfully = true,
+                            selectedMood = null,
+                            notes = "",
+                            aiInstruction = savedEntry.aiInstruction,
+                            mascotExpression = savedEntry.riskLevel.toMascotExpression()
+                        )
+                    }
                 }
-
-                _uiState.update {
-                    it.copy(
-                        isSaving = false,
-                        isSavedSuccessfully = true,
-                        selectedMood = null,
-                        notes = "",
-                        aiInstruction = savedEntry.aiInstruction,
-                        mascotExpression = expression
-                    )
-                }
-            }.onFailure { e ->
-                _uiState.update {
-                    it.copy(
-                        isSaving = false,
-                        errorMessage = e.localizedMessage ?: "Erro desconhecido"
-                    )
+                is Result.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            isSaving = false,
+                            errorMessage = result.error.localizedMessage ?: "Erro desconhecido"
+                        )
+                    }
                 }
             }
+        }
+    }
+
+    private fun resetUiState() {
+        _uiState.update {
+            it.copy(
+                isSavedSuccessfully = false,
+                errorMessage = null,
+                aiInstruction = "",
+                mascotExpression = MascotExpression.NORMAL
+            )
         }
     }
 }
