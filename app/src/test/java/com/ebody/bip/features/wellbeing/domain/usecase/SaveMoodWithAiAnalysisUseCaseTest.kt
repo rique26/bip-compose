@@ -11,7 +11,9 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import java.time.LocalDateTime
 
@@ -19,50 +21,55 @@ class SaveMoodWithAiAnalysisUseCaseTest {
 
     private val intelligenceRepository: ClinicalIntelligenceRepository = mockk()
     private val moodRepository: MoodRepository = mockk()
-    private val sut = SaveMoodWithAiAnalysisUseCase(intelligenceRepository, moodRepository)
+    private lateinit var useCase: SaveMoodWithAiAnalysisUseCase
+
+    @Before
+    fun setUp() {
+        useCase = SaveMoodWithAiAnalysisUseCase(intelligenceRepository, moodRepository)
+    }
 
     @Test
-    fun `deve enriquecer humor com dados da IA e salvar com sucesso quando os repositorios responderem`() = runTest {
-        val inputEntry = MoodEntry(
-            id = 0L,
-            level = 1,
-            notes = "Sentindo tonturas fortes",
-            dateTime = LocalDateTime.now()
-        )
+    fun `quando IA retorna sucesso, deve retornar entrada enriquecida com risco e instrucao`() = runTest {
+        // Arrange
+        val mood = MoodEntry(level = 1, notes = "Tudo ok", dateTime = LocalDateTime.now())
+        val analysis = RiskAnalysis(RiskLevel.ESTAVEL, "Continue se cuidando.")
 
-        // Resposta simulada da IA: Identifica um risco crítico com base na nota acima.
-        val aiAnalysisResult = RiskAnalysis(
-            riskLevel = RiskLevel.CRITICO,
-            instruction = "Alerta: Procure ajuda imediatamente."
-        )
+        coEvery { intelligenceRepository.analyzeSymptomRisk(any()) } returns Result.Success(analysis)
+        coEvery { moodRepository.saveMood(any()) } answers { firstArg() }
 
-        // O resultado final que o repositório deve salvar (o dado inicial + os dados da IA).
-        val expectedSavedEntry = inputEntry.copy(
-            riskLevel = RiskLevel.CRITICO,
-            aiInstruction = "Alerta: Procure ajuda imediatamente."
-        )
+        // Act
+        val result = useCase(mood)
 
-        // Configura o mock da IA: Quando a IA analisar este sintoma, retorne Sucesso com a análise crítica.
-        coEvery { intelligenceRepository.analyzeSymptomRisk(inputEntry) } returns Result.Success(aiAnalysisResult)
-        // Configura o mock do banco/repositório: Quando mandar salvar qualquer coisa, retorne o objeto enriquecido.
-        coEvery { moodRepository.saveMood(any()) } returns expectedSavedEntry
+        // Assert
+        assertTrue("Esperado Result.Success", result is Result.Success)
+        val savedMood = (result as Result.Success).data
 
-        // Invoca o UseCase passando o input inicial.
-        val result = sut(inputEntry)
+        assertEquals(RiskLevel.ESTAVEL, savedMood.riskLevel)
+        assertEquals("Continue se cuidando.", savedMood.aiInstruction)
 
-        // Garante que o UseCase retornou um status de Sucesso.
-        assertTrue(result is Result.Success)
-
-        // Faz o cast seguro do resultado para extrair os dados de sucesso.
-        val successData = (result as Result.Success).data
-
-        // Verifica se os dados retornados foram de fato enriquecidos corretamente pela IA.
-        assertEquals(RiskLevel.CRITICO, successData.riskLevel)
-        assertEquals("Alerta: Procure ajuda imediatamente.", successData.aiInstruction)
-
-        // coVerify certifica que o método da IA foi chamado exatamente 1 vez com o input correto.
-        coVerify(exactly = 1) { intelligenceRepository.analyzeSymptomRisk(inputEntry) }
-        // coVerify certifica que o método de salvar foi chamado exatamente 1 vez com qualquer parâmetro.
+        coVerify(exactly = 1) { intelligenceRepository.analyzeSymptomRisk(any()) }
         coVerify(exactly = 1) { moodRepository.saveMood(any()) }
+    }
+
+    @Test
+    fun `quando IA falha, deve abortar operacao e retornar Result Error sem salvar registro`() = runTest {
+        // Arrange
+        val mood = MoodEntry(level = 3, notes = "Dores intensas", dateTime = LocalDateTime.now())
+        val exception = Exception("Falha na GPU")
+
+        coEvery { intelligenceRepository.analyzeSymptomRisk(any()) } returns Result.Error(exception)
+
+        // Act
+        val result = useCase(mood)
+
+        // Assert
+        assertTrue("Esperado Result.Error ao falhar a IA", result is Result.Error)
+        val errorResult = (result as Result.Error).error
+
+        // Garante apenas que existe uma exceção retornada, sem falhar por variação de String
+        assertNotNull("Esperado um erro retornado", errorResult)
+
+        coVerify(exactly = 1) { intelligenceRepository.analyzeSymptomRisk(any()) }
+        coVerify(exactly = 0) { moodRepository.saveMood(any()) }
     }
 }

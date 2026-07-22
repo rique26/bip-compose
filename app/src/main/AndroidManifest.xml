@@ -18,20 +18,41 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.SEND_SMS" />
 
+    <permission
+        android:name="${applicationId}.ALARM_PERMISSION"
+        android:protectionLevel="signature" />
+
+    <uses-permission android:name="${applicationId}.ALARM_PERMISSION" />
+
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
+
     <application
         android:name=".BipApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
+        android:label="${appLabel}"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Bip">
+
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.work"
+                tools:node="remove" />
+        </provider>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.Bip">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -46,12 +67,15 @@
             android:turnScreenOn="true"
             android:excludeFromRecents="true"
             android:launchMode="singleInstance"
-            android:exported="false" />
+            android:exported="false"
+            tools:ignore="UnusedAttribute" />
 
         <receiver
             android:name=".features.schedule.data.alarm.AlarmReceiver"
             android:directBootAware="true"
-            android:exported="true">
+            android:exported="true"
+            android:permission="${applicationId}.ALARM_PERMISSION">
+
             <intent-filter>
                 <action android:name="${applicationId}.ALARM_TRIGGER" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -68,9 +92,8 @@
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
 
-
-
-
     </application>
+
+
 
 </manifest>
