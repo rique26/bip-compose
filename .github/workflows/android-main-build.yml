@@ -1,0 +1,51 @@
+name: Android Main Build
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integration-build:
+    name: Main branch confidence build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Inject Google Services JSON
+        env:
+          GOOGLE_SERVICES_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          mkdir -p app/src/debug
+          mkdir -p app/src/release
+          if [ -n "$GOOGLE_SERVICES_BASE64" ]; then
+            echo -n "$GOOGLE_SERVICES_BASE64" | base64 -d > app/src/debug/google-services.json
+            echo -n "$GOOGLE_SERVICES_BASE64" | base64 -d > app/src/release/google-services.json
+          else
+            MOCK_JSON='{"project_info":{"project_number":"000000000000","project_id":"bip-mock","storage_bucket":"bip.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:000000000000:android:0000000000000000","android_client_info":{"package_name":"com.ebody.bip"}},"oauth_client":[],"api_key":[{"current_key":"mock_key"}],"services":{"analytics_service":{"status":1}}}]}'
+            echo "$MOCK_JSON" > app/src/debug/google-services.json
+            echo "$MOCK_JSON" > app/src/release/google-services.json
+          fi
+
+      - name: Build Debug APK
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: main-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
