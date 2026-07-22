@@ -52,7 +52,6 @@ class SaveMoodWithAiAnalysisUseCaseTest {
         val result = useCase(mood)
 
         assertEquals(RiskLevel.ESTAVEL, result.riskLevel)
-        // Como não tem log, basta validar o estado do objeto
         assertTrue(result.aiInstruction.contains("consulte seu médico"))
         coVerify(exactly = 1) { moodRepository.saveMood(any()) }
     }
