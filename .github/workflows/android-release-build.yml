@@ -1,0 +1,166 @@
+name: Android Release Build & Distribute
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # necessário p/ git describe/rev-list do versionamento
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # 1. Valida se os Secrets necessários existem no ambiente
+      - name: Validate release and Firebase secrets
+        shell: bash
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          FIREBASE_ANDROID_APP_ID: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
+        run: |
+          missing=0
+          [ -z "$FIREBASE_SERVICE_ACCOUNT_JSON" ] && echo "Missing FIREBASE_SERVICE_ACCOUNT_JSON" && missing=1
+          [ -z "$RELEASE_KEYSTORE_BASE64" ] && echo "Missing RELEASE_KEYSTORE_BASE64" && missing=1
+          [ -z "$GOOGLE_SERVICES_JSON" ] && echo "Missing GOOGLE_SERVICES_JSON" && missing=1
+          [ -z "$RELEASE_KEY_ALIAS" ] && echo "Missing RELEASE_KEY_ALIAS" && missing=1
+          [ -z "$RELEASE_KEY_PASSWORD" ] && echo "Missing RELEASE_KEY_PASSWORD" && missing=1
+          [ -z "$RELEASE_STORE_PASSWORD" ] && echo "Missing RELEASE_STORE_PASSWORD" && missing=1
+          [ -z "$FIREBASE_ANDROID_APP_ID" ] && echo "Missing FIREBASE_ANDROID_APP_ID" && missing=1
+          if [ $missing -eq 1 ]; then exit 1; fi
+
+      # 2. Injeta o google-services.json e decodifica a Keystore/credencial Firebase
+      - name: Prepare release signing and Firebase credentials
+        shell: bash
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          umask 077
+          mkdir -p app/src/release
+          echo "$GOOGLE_SERVICES_JSON" | base64 -d > app/src/release/google-services.json
+          echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore.jks"
+          echo "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/firebase-sa.json"
+
+      # 3. Compila o APK de Release Assinado
+      - name: Build signed release APK
+        shell: bash
+        run: ./gradlew :app:assembleRelease
+        env:
+          RELEASE_SIGNING_STORE_FILE: ${{ runner.temp }}/release.keystore.jks
+          RELEASE_SIGNING_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_SIGNING_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_SIGNING_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+
+      # 4. Resolve o caminho e versão do APK a partir do output-metadata.json
+      - name: Resolve release APK from metadata
+        shell: bash
+        run: |
+          python3 -c '
+          import json, os
+          meta_path = "app/build/outputs/apk/release/output-metadata.json"
+          if os.path.exists(meta_path):
+              with open(meta_path) as f:
+                  data = json.load(f)
+                  element = data["elements"][0]
+                  apk_path = "app/build/outputs/apk/release/" + element["outputFile"]
+                  version_name = element.get("versionName", "unknown")
+                  print(f"Resolved APK: {apk_path}")
+                  print(f"Version: {version_name} ({element.get(\"versionCode\", \"1\")})")
+                  with open(os.environ["GITHUB_ENV"], "a") as ge:
+                      ge.write(f"APK_PATH={apk_path}\n")
+                      ge.write(f"RESOLVED_VERSION_NAME={version_name}\n")
+          '
+
+      # 5. Valida rigorosamente se o APK gerado está realmente assinado usando apksigner
+      - name: Verify signed APK
+        shell: bash
+        run: |
+          if [[ "$APK_PATH" == *unsigned* ]]; then
+            echo "::error::Resolved APK is still unsigned: $APK_PATH"
+            exit 1
+          fi
+
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -n1)"
+          if [ -z "$APKSIGNER" ]; then
+            echo "::error::apksigner not found in ANDROID_HOME build tools"
+            exit 1
+          fi
+
+          "$APKSIGNER" verify --verbose "$APK_PATH"
+
+      # 6. Salva o APK gerado nos Artifacts do GitHub Actions
+      - name: Upload signed release APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: ${{ env.APK_PATH }}
+
+      # 7. Instala a CLI do Firebase
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      # 7.5. Verifica se o grupo de testadores existe antes de tentar distribuir
+      - name: Verify tester group exists
+        shell: bash
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-sa.json
+        run: |
+          if ! firebase appdistribution:group:list --project "${{ secrets.FIREBASE_ANDROID_APP_ID }}" | grep -q "android-testers"; then
+            echo "::error::Grupo 'android-testers' não encontrado no Firebase App Distribution."
+            exit 1
+          fi
+
+      # 8. Envia para o Firebase App Distribution
+      - name: Distribute APK to Firebase App Distribution
+        shell: bash
+        run: |
+          firebase appdistribution:distribute "$APK_PATH" \
+            --app "${{ secrets.FIREBASE_ANDROID_APP_ID }}" \
+            --groups "android-testers" \
+            --release-notes "Build automatizada enviada via GitHub Actions"
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-sa.json
+
+      - name: Tag release
+        if: success()
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          TAG="v${RESOLVED_VERSION_NAME}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG já existe, pulando (provavelmente nenhum commit novo desde a última release)."
+          else
+            git tag "$TAG"
+            git push origin "$TAG"
+          fi
+
+      # 9. Limpa credenciais sensíveis do runner
+      - name: Clean up sensitive files
+        if: always()
+        shell: bash
+        run: |
+          rm -f "$RUNNER_TEMP/release.keystore.jks" "$RUNNER_TEMP/firebase-sa.json"
