@@ -24,6 +24,9 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      - name: Set up Gradle Cache
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Inject Google Services JSON
         env:
           GOOGLE_SERVICES_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON }}
