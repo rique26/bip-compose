@@ -14,6 +14,7 @@ dependencyLocking {
     lockAllConfigurations()
 }
 
+
 fun git(vararg args: String): String? = try {
     val process = ProcessBuilder("git", *args)
         .directory(rootProject.projectDir)
