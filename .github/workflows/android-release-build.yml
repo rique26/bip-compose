@@ -87,8 +87,9 @@ jobs:
                   element = data["elements"][0]
                   apk_path = "app/build/outputs/apk/release/" + element["outputFile"]
                   version_name = element.get("versionName", "unknown")
+                  version_code = element.get("versionCode", "1")
                   print(f"Resolved APK: {apk_path}")
-                  print(f"Version: {version_name} ({element.get(\"versionCode\", \"1\")})")
+                  print(f"Version: {version_name} ({version_code})")
                   with open(os.environ["GITHUB_ENV"], "a") as ge:
                       ge.write(f"APK_PATH={apk_path}\n")
                       ge.write(f"RESOLVED_VERSION_NAME={version_name}\n")
