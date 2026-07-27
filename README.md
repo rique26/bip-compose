@@ -39,10 +39,10 @@ O módulo `wellbeing` processa o histórico de logs do usuário localmente de fo
 
 ## 🧪 Estratégia de Testes
 
-A separação de conceitos através da Clean Architecture permite validar as regras de negócio de forma isolada:
+A separação de conceitos através da Clean Architecture permite isolar e garantir a estabilidade das regras de negócio do ecossistema do aplicativo:
 
-* **Testes Unitários (JUnit + MockK):** Focados nas validações de regras dos *Use Cases*, no processamento de dados do histórico e nas máquinas de estado das ViewModels.
-* **Testes Instrumentais (Compose Test Rule):** Testes de interface automatizados simulando fluxos críticos, como o cadastro de novos medicamentos.
+* **Testes Unitários: Focados na validação das regras de negócio da camada de Domain, mapeamentos de dados e no gerenciamento de estado da camada de Presentation.
+* **Testes de Integração Locais: Utilizados para validar o comportamento da camada de Data, garantindo o correto funcionamento da persistência local, integrações de rede, repositórios e fontes de dados diretamente na JVM.
 
 ---
 

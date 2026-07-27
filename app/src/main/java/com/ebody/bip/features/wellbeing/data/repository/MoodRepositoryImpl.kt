@@ -3,8 +3,6 @@ package com.ebody.bip.features.wellbeing.data.repository
 import android.util.Log
 import com.ebody.bip.core.domain.util.Result
 import com.ebody.bip.features.auth.domain.repository.SessionManager
-import com.ebody.bip.features.schedule.data.mapper.toEntity
-import com.ebody.bip.features.schedule.data.repository.ReminderRepositoryImpl
 import com.ebody.bip.features.wellbeing.data.datasource.local.MoodLocalDataSource
 import com.ebody.bip.features.wellbeing.data.datasource.remote.MoodRemoteDataSource
 import com.ebody.bip.features.wellbeing.data.mapper.toDomain
@@ -16,7 +14,6 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import java.time.LocalDateTime
 import javax.inject.Inject
-import kotlin.collections.map
 
 class MoodRepositoryImpl @Inject constructor(
     private val localDataSource: MoodLocalDataSource,
@@ -32,9 +29,9 @@ class MoodRepositoryImpl @Inject constructor(
         return sessionManager.getUserSession().firstOrNull()?.userId
     }
 
-    override suspend fun saveMood(mood: MoodEntry) {
-        Log.d(TAG, "Salvando registro localmente (Room)...")
-        val insertedId = localDataSource.insertMood(mood)
+    override suspend fun saveMood(mood: MoodEntry): MoodEntry {
+        val entity = mood.toEntity()
+        val insertedId = localDataSource.insertMood(entity)
 
         val savedMood = if (mood.id == 0L && insertedId > 0) {
             mood.copy(id = insertedId)
@@ -43,14 +40,10 @@ class MoodRepositoryImpl @Inject constructor(
         }
 
         getCurrentUserId()?.let { userId ->
-            Log.d(TAG, "Usuário logado ($userId). Iniciando sincronização remota...")
-            val result = remoteDataSource.syncMood(userId, savedMood)
-
-            when (result) {
-                is Result.Success -> Log.i(TAG, "Sincronização remota (Firestore) aceita com sucesso.")
-                is Result.Error -> Log.e(TAG, "Falha na sincronização remota.")
-            }
+            remoteDataSource.syncMood(userId, savedMood)
         }
+
+        return savedMood
     }
 
     override fun getMoodHistory(): Flow<List<MoodEntry>> {

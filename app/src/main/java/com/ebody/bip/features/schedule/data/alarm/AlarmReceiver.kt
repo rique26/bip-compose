@@ -26,42 +26,46 @@ class AlarmReceiver : BroadcastReceiver() {
 
     companion object {
         private const val TAG = "AlarmDebug"
+        const val ACTION_ALARM_TRIGGER = "ALARM_TRIGGER"
     }
 
     override fun onReceive(context: Context, intent: Intent) {
         Log.d(TAG, "onReceive called with action: ${intent.action}")
+
+        if (intent.action == null) return
+
         when (intent.action) {
-
-            "${context.packageName}.ALARM_TRIGGER" -> {
-                val label = intent.getStringExtra("ALARM_LABEL") ?: "Medicamento"
-                val dosage = intent.getStringExtra("ALARM_DOSAGE") ?: ""
-                val time = intent.getLongExtra("ALARM_TIME", 0L)
-                val requestCode = intent.getIntExtra("REQUEST_CODE", 0)
-
-                Log.d(TAG, "ALARM_TRIGGER received. Label: $label, Dosage: $dosage, Time: $time, RequestCode: $requestCode")
-
-                // Inicia serviço (som + notificação + tela cheia)
-                ContextCompat.startForegroundService(
-                    context,
-                    Intent(context, AlarmService::class.java).apply {
-                        action = AlarmService.ACTION_NEW_ALARM   // ← adicione esta linha
-                        putExtra("ALARM_LABEL", label)
-                        putExtra("ALARM_DOSAGE", dosage)
-                    }
-                ).also {
-                    Log.d(TAG, "Foreground service started successfully from AlarmReceiver.")
-                }
-
-                // Reagenda para amanhã automaticamente
-                rescheduleForTomorrow(context, intent, time, requestCode)
+            "${context.packageName}.$ACTION_ALARM_TRIGGER" -> {
+                handleAlarmTrigger(context, intent)
             }
 
-            "android.intent.action.BOOT_COMPLETED",
-            "android.intent.action.LOCKED_BOOT_COMPLETED" -> {
+            Intent.ACTION_BOOT_COMPLETED,
+            Intent.ACTION_LOCKED_BOOT_COMPLETED -> {
                 Log.d(TAG, "Boot detectado — restaurando alarmes")
                 restoreAlarmsAfterBoot(context)
             }
         }
+    }
+
+    private fun handleAlarmTrigger(context: Context, intent: Intent) {
+        val label = intent.getStringExtra("ALARM_LABEL") ?: "Medicamento"
+        val dosage = intent.getStringExtra("ALARM_DOSAGE") ?: ""
+        val time = intent.getLongExtra("ALARM_TIME", 0L)
+        val requestCode = intent.getIntExtra("REQUEST_CODE", 0)
+
+        Log.d(TAG, "ALARM_TRIGGER - Label: $label, Dosage: $dosage")
+
+        // Inicia o Foreground Service
+        ContextCompat.startForegroundService(
+            context,
+            Intent(context, AlarmService::class.java).apply {
+                action = AlarmService.ACTION_NEW_ALARM
+                putExtra("ALARM_LABEL", label)
+                putExtra("ALARM_DOSAGE", dosage)
+            }
+        )
+
+        rescheduleForTomorrow(context, intent, time, requestCode)
     }
 
     private fun rescheduleForTomorrow(
