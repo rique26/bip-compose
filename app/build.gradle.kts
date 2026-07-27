@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -8,6 +10,67 @@ plugins {
     alias(libs.plugins.google.services)
 }
 
+dependencyLocking {
+    lockAllConfigurations()
+}
+
+
+fun git(vararg args: String): String? = try {
+    val process = ProcessBuilder("git", *args)
+        .directory(rootProject.projectDir)
+        .redirectErrorStream(true)
+        .start()
+    val output = process.inputStream.bufferedReader().use { it.readText().trim() }
+    if (process.waitFor() == 0) output.takeIf { it.isNotBlank() } else null
+} catch (_: Exception) { null }
+
+fun semVerToVersionCode(version: String): Int? {
+    val match = Regex("""(\d+)\.(\d+)\.(\d+)""").matchEntire(version) ?: return null
+    val (major, minor, patch) = match.destructured
+    return major.toInt() * 10000 + minor.toInt() * 100 + patch.toInt()
+}
+
+val versionProps = Properties().apply {
+    load(rootProject.file("version.properties").inputStream())
+}
+val major = versionProps["MAJOR"].toString().toInt()
+val minor = versionProps["MINOR"].toString().toInt()
+val patch = versionProps["PATCH"].toString().toInt()
+
+val fallbackVersionName = "$major.$minor.$patch"
+val fallbackVersionCode = major * 10000 + minor * 100 + patch
+
+val latestTag = git("describe", "--tags", "--abbrev=0")
+val sha = git("rev-parse", "--short", "HEAD") ?: "nogit"
+val commitsSinceTag = latestTag?.let { tag ->
+    git("rev-list", "$tag..HEAD", "--count")?.toIntOrNull() ?: 0
+} ?: 0
+
+val baseTagVersion = latestTag?.removePrefix("v")
+val baseVersionName = baseTagVersion ?: fallbackVersionName
+val baseVersionCode = baseTagVersion?.let(::semVerToVersionCode) ?: fallbackVersionCode
+
+val versionNameFromGit = when {
+    latestTag == null -> "$fallbackVersionName+local.$sha"
+    commitsSinceTag == 0 -> baseVersionName
+    else -> "$baseVersionName+$commitsSinceTag.$sha"
+}
+
+val versionCodeFromGit = baseVersionCode + commitsSinceTag
+
+val localProps = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) load(file.inputStream())
+}
+
+fun resolveSecretOrNull(name: String): String? =
+    System.getenv(name)?.takeIf { it.isNotBlank() }
+        ?: localProps.getProperty(name)?.takeIf { it.isNotBlank() }
+
+fun resolveSecret(name: String): String =
+    resolveSecretOrNull(name)
+        ?: error("Missing secret: $name — add it to local.properties or set it as an env var.")
+
 android {
     namespace = "com.ebody.bip"
     compileSdk = 36
@@ -16,15 +79,35 @@ android {
         applicationId = "com.ebody.bip"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = versionCodeFromGit
+        versionName = versionNameFromGit
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            val storeFilePath = resolveSecretOrNull("RELEASE_SIGNING_STORE_FILE")
+            if (storeFilePath != null) {
+                storeFile = file(storeFilePath)
+                storePassword = resolveSecretOrNull("RELEASE_SIGNING_STORE_PASSWORD") ?: ""
+                keyAlias = resolveSecretOrNull("RELEASE_SIGNING_KEY_ALIAS") ?: ""
+                keyPassword = resolveSecretOrNull("RELEASE_SIGNING_KEY_PASSWORD") ?: ""
+            }
+        }
+    }
+
     buildTypes {
-        release {
+        debug {
+            manifestPlaceholders["appLabel"] = "Bip (Debug)"
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
             isMinifyEnabled = false
+        }
+        release {
+            signingConfig = signingConfigs.getByName("release")
+            manifestPlaceholders["appLabel"] = "Bip"
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -130,11 +213,12 @@ dependencies {
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.kotlinx.coroutines.test)
-
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
