@@ -12,9 +12,12 @@ class LoginUseCase @Inject constructor(
     private val repository: AuthRepository,
     private val emailValidator: EmailValidator
 ) {
-    suspend operator fun invoke(request: LoginRequest): Result<AuthUser, BipAuthException> {
-        val trimmedEmail = request.email.trim()
-        val trimmedPassword = request.password.trim()
+    suspend operator fun invoke(
+        email: String,
+        password: String
+    ): Result<AuthUser, BipAuthException> {
+        val trimmedEmail = email.trim()
+        val trimmedPassword = password.trim()
 
         return when {
             trimmedEmail.isBlank() -> Result.Error(BipAuthException.EmptyEmail)

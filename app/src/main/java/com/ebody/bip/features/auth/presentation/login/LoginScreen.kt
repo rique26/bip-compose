@@ -19,7 +19,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import com.ebody.bip.features.auth.domain.model.asString
 
 @Composable
@@ -29,23 +32,43 @@ fun LoginScreen(
     onNavigateToRegister: () -> Unit
 ) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val snackbarHostState = remember { SnackbarHostState() }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
-        viewModel.effect.collect { effect ->
-            when (effect) {
-                LoginEffect.NavigateToHome -> onLoginSuccess()
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            viewModel.effect.collect { effect ->
+                when (effect) {
+                    LoginEffect.NavigateToHome -> onLoginSuccess()
 
-                is LoginEffect.ShowError -> {
-                    val message = effect.error.asString(context)
-                    snackbarHostState.showSnackbar(message = message)
+                    is LoginEffect.ShowError -> {
+                        val message = effect.error.asString(context)
+                        snackbarHostState.showSnackbar(message = message)
+                    }
                 }
             }
         }
     }
 
+    LoginContent(
+        uiState = uiState,
+        snackbarHostState = snackbarHostState,
+        onEvent = viewModel::onEvent,
+        onNavigateToRegister = onNavigateToRegister
+    )
+}
+
+@Composable
+fun LoginContent(
+    uiState: LoginUiState,
+    snackbarHostState: SnackbarHostState,
+    onEvent: (LoginEvent) -> Unit,
+    onNavigateToRegister: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Scaffold(
+        modifier = modifier,
         contentWindowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp),
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
@@ -55,16 +78,20 @@ fun LoginScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
-            LoginHeader()
+            LoginHeader(modifier)
 
             LoginForm(
                 uiState = uiState,
-                onEvent = viewModel::onEvent
+                onEvent = onEvent,
+                modifier = modifier
             )
 
             Spacer(modifier = Modifier.weight(1f))
 
-            LoginFooter(onNavigateToRegister)
+            LoginFooter(
+                onNavigateToRegister = onNavigateToRegister,
+                modifier = modifier
+            )
         }
     }
 }
@@ -72,9 +99,10 @@ fun LoginScreen(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun LoginScreenPreview() {
-    LoginScreen(
-        viewModel = hiltViewModel(),
-        onLoginSuccess = {},
+    LoginContent(
+        uiState = LoginUiState(),
+        snackbarHostState = remember { SnackbarHostState() },
+        onEvent = {},
         onNavigateToRegister = {}
     )
 }

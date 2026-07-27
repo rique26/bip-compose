@@ -15,5 +15,20 @@
     <string name="error_too_many_requests">Muitas tentativas sem sucesso. Aguarde alguns minutos antes de tentar de novo.</string>
     <string name="error_unknown">Algo deu errado do nosso lado. Estamos trabalhando para resolver!</string>
 
+    <!-- Header Login -->
+    <string name="login_subtitle">Seu Cuidador digital</string>
+
+    <!-- Formulário de Login -->
+    <string name="login_label_email">E-mail</string>
+    <string name="login_placeholder_email">mail@email.com</string>
+    <string name="login_label_password">Senha</string>
+    <string name="login_placeholder_password">**********</string>
+    <string name="login_forgot_password">Esqueci minha senha</string>
+    <string name="login_button_enter">Entrar</string>
+
+    <!-- Footer Login -->
+    <string name="login_no_account_question">Não tem cadastro?</string>
+    <string name="login_register_here">Clique aqui!</string>
+
 
 </resources>

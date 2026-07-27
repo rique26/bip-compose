@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -38,9 +39,11 @@ import com.ebody.bip.core.presentation.components.TextField
 import com.ebody.bip.features.auth.presentation.components.WaveHeaderBackground
 
 @Composable
-fun LoginHeader() {
+fun LoginHeader(
+    modifier: Modifier
+) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(340.dp)
     ) {
@@ -66,19 +69,19 @@ fun LoginHeader() {
                 Image(
                     painter = painterResource(R.drawable.mascot_bip_greeting),
                     contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
             }
 
             Text(
-                text = "Bip",
+                text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.displayLarge,
                 color = MaterialTheme.colorScheme.onPrimary
             )
 
             Text(
-                text = "Seu Cuidador digital",
+                text = stringResource(R.string.login_subtitle),
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onPrimary
             )
@@ -89,18 +92,19 @@ fun LoginHeader() {
 @Composable
 fun LoginForm(
     uiState: LoginUiState,
-    onEvent: (LoginUiEvent) -> Unit
+    onEvent: (LoginEvent) -> Unit,
+    modifier: Modifier
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 40.dp)
     ) {
         TextField(
             value = uiState.email,
-            onValueChange = { onEvent(LoginUiEvent.OnEmailChanged(it)) },
-            label = "Email",
-            placeholder = "mail@email.com",
+            onValueChange = { onEvent(LoginEvent.OnEmailChanged(it)) },
+            label = stringResource(R.string.login_label_email),
+            placeholder = stringResource(R.string.login_placeholder_email),
             leadingIcon = Icons.Default.Email,
         )
 
@@ -108,13 +112,13 @@ fun LoginForm(
 
         TextField(
             value = uiState.password,
-            onValueChange = { onEvent(LoginUiEvent.OnPasswordChanged(it)) },
-            label = "Senha",
-            placeholder = "**********",
+            onValueChange = { onEvent(LoginEvent.OnPasswordChanged(it)) },
+            label = stringResource(R.string.login_label_password),
+            placeholder = stringResource(R.string.login_placeholder_password),
             leadingIcon = Icons.Default.Lock,
             visualTransformation = if (uiState.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
-                IconButton(onClick = { onEvent(LoginUiEvent.OnTogglePasswordVisibility) }) {
+                IconButton(onClick = { onEvent(LoginEvent.OnTogglePasswordVisibility) }) {
                     Icon(
                         imageVector = if (uiState.isPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                         contentDescription = null,
@@ -129,7 +133,7 @@ fun LoginForm(
             modifier = Modifier.align(Alignment.End)
         ) {
             Text(
-                text = "Esqueci minha senha",
+                text = stringResource(R.string.login_forgot_password),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -139,31 +143,34 @@ fun LoginForm(
 
         LoadingButton(
             isLoading = uiState.isLoading,
-            onClick = { onEvent(LoginUiEvent.OnLogin) },
+            onClick = { onEvent(LoginEvent.OnLoginClick) },
             modifier = Modifier,
-            text = "Entrar"
+            text = stringResource(R.string.login_button_enter)
         )
     }
 }
 
 @Composable
-fun LoginFooter(onNavigateToRegister: () -> Unit) {
+fun LoginFooter(
+    onNavigateToRegister: () -> Unit,
+    modifier: Modifier
+) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 32.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "Não tem cadastro?",
+            text = stringResource(R.string.login_register_here),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface,
         )
 
         TextButton(onClick = onNavigateToRegister) {
             Text(
-                text = "Clique aqui!",
+                text = stringResource(R.string.login_no_account_question),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
