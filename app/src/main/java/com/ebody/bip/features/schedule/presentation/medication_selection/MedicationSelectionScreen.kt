@@ -19,29 +19,17 @@ fun MedicationSelectionScreen(
     viewModel: MedicationSelectionViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
-    val medications by viewModel.medications.collectAsState()
-    val searchQuery by viewModel.searchQuery.collectAsState()
-    var selectedIds by remember { mutableStateOf(setOf<Long>()) }
-
-    LaunchedEffect(Unit) {
-        viewModel.loadMedications()
-    }
 
     MedicationSelectionContent(
         onNavigateToSchedule = {
-            onNavigateToSchedule(selectedIds.toList())
+            onNavigateToSchedule(state.selectedIds.toList())
         },
         state = state,
-        medications = medications,
-        query = searchQuery,
-        selectedIds = selectedIds,
-        onQueryChange = { newQuery -> viewModel.onSearchQueryChanged(newQuery) },
+        onQueryChange = { newQuery ->
+            viewModel.onEvent(MedicationSelectionEvent.SearchQueryChanged(newQuery))
+        },
         onSelectionChange = { id, isSelected ->
-            selectedIds = if (isSelected) {
-                selectedIds + id
-            } else {
-                selectedIds - id
-            }
+            viewModel.onEvent(MedicationSelectionEvent.ToggleMedicationSelection(id, isSelected))
         }
     )
 }
