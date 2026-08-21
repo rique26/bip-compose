@@ -11,6 +11,7 @@ import androidx.core.content.ContextCompat
 import com.ebody.bip.features.schedule.data.local.ReminderDao
 import com.ebody.bip.features.schedule.data.model.ReminderEntity
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -27,6 +28,7 @@ class AlarmReceiver : BroadcastReceiver() {
     companion object {
         private const val TAG = "AlarmDebug"
         const val ACTION_ALARM_TRIGGER = "ALARM_TRIGGER"
+        var dispatcherProvider: CoroutineDispatcher = Dispatchers.IO
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -97,7 +99,7 @@ class AlarmReceiver : BroadcastReceiver() {
         Log.d(TAG, "restoreAlarmsAfterBoot initiated.")
         val pendingResult = goAsync()
 
-        CoroutineScope(Dispatchers.IO).launch {
+        CoroutineScope(dispatcherProvider).launch {
             try {
                 val reminders = reminderDao.getAllActiveReminders().first() // Usando uma chamada de fluxo válida para obter a lista
                 Log.d(TAG, "Fetched reminders list. Size: ${reminders.size}")

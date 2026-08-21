@@ -6,10 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ebody.bip.features.schedule.presentation.medication_schedule.components.MedicationScheduleContent
 
@@ -21,59 +17,28 @@ fun MedicationScheduleScreen(
     onFinish: () -> Unit,
     viewModel: MedicationScheduleViewModel = hiltViewModel()
 ) {
+    val state by viewModel.uiState.collectAsState()
+
     LaunchedEffect(medicationIds) {
-        viewModel.loadMedications(medicationIds)
+        viewModel.onEvent(MedicationScheduleEvent.LoadMedications(medicationIds))
     }
 
-    val medications by viewModel.medications.collectAsState()
-    val isSaving by viewModel.isSaving.collectAsState()
+    val timePickerState = rememberTimePickerState(
+        initialHour = state.selectedHour,
+        initialMinute = state.selectedMinute
+    )
 
-    val scheduleTimes = remember { mutableStateListOf(Pair(8, 0)) }
-    var dosage by remember { mutableStateOf("") }
-
-    var showDosageDialog by remember { mutableStateOf(false) }
-    var showTimePicker by remember { mutableStateOf(false) }
-    var editingIndex by remember { mutableStateOf(-1) }
-
-    val timePickerState = rememberTimePickerState(initialHour = 8, initialMinute = 0)
+    // Atualiza o estado interno do TimePicker se alterado via fluxo de UI
+    LaunchedEffect(state.selectedHour, state.selectedMinute) {
+        timePickerState.hour = state.selectedHour
+        timePickerState.minute = state.selectedMinute
+    }
 
     MedicationScheduleContent(
-        medications = medications,
-        dosage = dosage,
-        scheduleTimes = scheduleTimes,
+        state = state,
         timePickerState = timePickerState,
-        showDosageDialog = showDosageDialog,
-        showTimePicker = showTimePicker,
         onBack = onBack,
-        onSaveClick = {
-            if (dosage.isNotBlank() && !isSaving) {
-                viewModel.saveReminders(
-                    scheduleTimes = scheduleTimes,
-                    dosage = dosage,
-                    onSuccess = {
-                        onFinish()
-                    }
-                )
-            }
-        },
-        onAddSchedule = { scheduleTimes.add(Pair(8, 0)) },
-        onRemoveSchedule = { index -> scheduleTimes.removeAt(index) },
-        onScheduleClick = { index, horario ->
-            editingIndex = index
-            timePickerState.hour = horario.first
-            timePickerState.minute = horario.second
-            showTimePicker = true
-        },
-        onDosageClick = { showDosageDialog = true },
-        onDismissDosage = { showDosageDialog = false },
-        onConfirmDosage = { selectedDosage ->
-            dosage = selectedDosage
-            showDosageDialog = false
-        },
-        onDismissTime = { showTimePicker = false },
-        onConfirmTime = {
-            scheduleTimes[editingIndex] = Pair(timePickerState.hour, timePickerState.minute)
-            showTimePicker = false
-        }
+        onEvent = viewModel::onEvent,
+        onFinish = onFinish
     )
 }
