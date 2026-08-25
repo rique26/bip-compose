@@ -139,4 +139,47 @@ class MedicationScheduleViewModelTest {
         assertTrue(successCalled)
         coVerify(exactly = 1) { saveReminderUseCase(any()) }
     }
+
+    @Test
+    fun `saveReminders with three custom times and 3 pills dosage should trigger usecase 3 times`() = runTest {
+        // Arrange
+        val medicationId = 1L
+        val mockMedication = Medication(id = medicationId, name = "Paracetamol")
+
+        coEvery { getMedicationByIdUseCase(medicationId) } returns mockMedication
+        coEvery { saveReminderUseCase(any()) } returns Unit
+
+        // 1. Carrega o medicamento
+        viewModel.onEvent(MedicationScheduleEvent.LoadMedications(listOf(medicationId)))
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // 2. Define a dosagem para "3 comprimidos"
+        viewModel.onEvent(MedicationScheduleEvent.UpdateDosage("3 comprimidos"))
+
+        // 3. Configura os 3 horários solicitados: 09:00, 09:10 e 09:15
+        // Atualiza o primeiro horário (índice 0) para 09:00
+        viewModel.onEvent(MedicationScheduleEvent.OpenTimePicker(0, Pair(8, 0)))
+        viewModel.onEvent(MedicationScheduleEvent.ConfirmTimePicker(9, 0))
+
+        // Adiciona e configura o segundo horário (índice 1) para 09:10
+        viewModel.onEvent(MedicationScheduleEvent.AddScheduleTime())
+        viewModel.onEvent(MedicationScheduleEvent.OpenTimePicker(1, Pair(8, 0)))
+        viewModel.onEvent(MedicationScheduleEvent.ConfirmTimePicker(9, 10))
+
+        // Adiciona e configura o terceiro horário (índice 2) para 09:15
+        viewModel.onEvent(MedicationScheduleEvent.AddScheduleTime())
+        viewModel.onEvent(MedicationScheduleEvent.OpenTimePicker(2, Pair(8, 0)))
+        viewModel.onEvent(MedicationScheduleEvent.ConfirmTimePicker(9, 15))
+
+        var successCalled = false
+        val onSuccess = { successCalled = true }
+
+        // Act: Dispara o salvamento
+        viewModel.onEvent(MedicationScheduleEvent.SaveReminders(onSuccess))
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Assert: Valida que a operação foi bem-sucedida e que o use case salvou exatamente 3 lembretes (um para cada horário)
+        assertTrue(successCalled)
+        coVerify(exactly = 3) { saveReminderUseCase(any()) }
+    }
 }

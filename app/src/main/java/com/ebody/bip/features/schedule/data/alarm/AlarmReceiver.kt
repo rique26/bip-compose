@@ -76,14 +76,17 @@ class AlarmReceiver : BroadcastReceiver() {
         time: Long,
         requestCode: Int
     ) {
-        // Se time for maior que 0, usa ele como base. Adiciona 1 dia (24h em millis).
-        val triggerTime = if (time > 0) time + (24 * 60 * 60 * 1000) else System.currentTimeMillis() + (24 * 60 * 60 * 1000)
+        val baseTime = if (time > 0) time else System.currentTimeMillis()
+        val triggerTime = baseTime + (24 * 60 * 60 * 1000L)
 
         val calendar = Calendar.getInstance().apply {
             timeInMillis = triggerTime
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
         }
+
+        // Atualiza o intent com o novo tempo corrigido para o próximo ciclo
+        originalIntent.putExtra("ALARM_TIME", calendar.timeInMillis)
 
         val pendingIntent = PendingIntent.getBroadcast(
             context,

@@ -283,6 +283,7 @@ class AlarmService : Service() {
         stopSound()
         wakeLock?.release()
         wakeLock = null
+        stopForeground(true)
         super.onDestroy()
     }
 
