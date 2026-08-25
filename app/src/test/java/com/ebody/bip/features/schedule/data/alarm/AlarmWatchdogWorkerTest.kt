@@ -9,6 +9,7 @@ import com.ebody.bip.core.di.DatabaseModule
 import com.ebody.bip.features.emergency.data.local.ContactDao
 import com.ebody.bip.features.schedule.data.local.MedicationDao
 import com.ebody.bip.features.schedule.data.local.ReminderDao
+import com.ebody.bip.features.schedule.data.model.MedicationEntity
 import com.ebody.bip.features.schedule.data.model.ReminderEntity
 import com.ebody.bip.features.schedule.di.AlarmModule
 import com.ebody.bip.features.schedule.domain.AlarmScheduler
@@ -46,6 +47,7 @@ class AlarmWatchdogWorkerTest {
 
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
+
     @BindValue
     @JvmField
     val reminderDao: ReminderDao = mockk(relaxed = true)
@@ -73,21 +75,26 @@ class AlarmWatchdogWorkerTest {
     }
 
     @Test
-    fun doWork_whenActiveRemindersExist_shouldScanAndRevalidateSuccessfully() = runBlocking {
+    fun `doWork when active reminders exist should schedule alarms successfully`() = runBlocking {
         // Arrange
-        val mockReminders = listOf(
-            ReminderEntity(
-                id = 1L,
-                medicationId = 10L,
-                time = System.currentTimeMillis() + 60000,
-                dosage = "1 comprimido",
-                requestCode = 301,
-                createdAt = System.currentTimeMillis()
-            )
+        val medicationId = 10L
+        val mockReminder = ReminderEntity(
+            id = 1L,
+            medicationId = medicationId,
+            time = System.currentTimeMillis() + 60000,
+            dosage = "3 comprimidos",
+            createdAt = System.currentTimeMillis(),
+            requestCode = 301
         )
-        coEvery { reminderDao.getAllActiveReminders() } returns flowOf(mockReminders)
 
-        // Passa o workerFactory para que o Hilt consiga instanciar o Worker com as dependências
+        val mockMedicationEntity = MedicationEntity(
+            id = medicationId,
+            name = "Paracetamol"
+        )
+
+        coEvery { reminderDao.getAllActiveReminders() } returns flowOf(listOf(mockReminder))
+        coEvery { medicationDao.getMedicationById(medicationId) } returns mockMedicationEntity
+
         val worker = TestListenableWorkerBuilder<AlarmWatchdogWorker>(context)
             .setWorkerFactory(workerFactory)
             .build()
@@ -98,6 +105,35 @@ class AlarmWatchdogWorkerTest {
         // Assert
         assertEquals(ListenableWorker.Result.success(), result)
         coVerify(exactly = 1) { reminderDao.getAllActiveReminders() }
+        coVerify(exactly = 1) { medicationDao.getMedicationById(medicationId) }
+        coVerify(exactly = 1) { alarmScheduler.schedule(any<MedicationReminder>()) }
+    }
+
+    @Test
+    fun `doWork when multiple active reminders exist should schedule all alarms successfully`() = runBlocking {
+        // Arrange (ordem corrigida: id, medicationId, time, dosage, createdAt, requestCode)
+        val reminders = listOf(
+            ReminderEntity(1L, 10L, System.currentTimeMillis() + 60000, "1 comp", System.currentTimeMillis(), 301),
+            ReminderEntity(2L, 20L, System.currentTimeMillis() + 120000, "2 ml", System.currentTimeMillis(), 302)
+        )
+        val med1 = MedicationEntity(10L, "Dipirona")
+        val med2 = MedicationEntity(20L, "Ibuprofeno")
+
+        coEvery { reminderDao.getAllActiveReminders() } returns flowOf(reminders)
+        coEvery { medicationDao.getMedicationById(10L) } returns med1
+        coEvery { medicationDao.getMedicationById(20L) } returns med2
+
+        val worker = TestListenableWorkerBuilder<AlarmWatchdogWorker>(context)
+            .setWorkerFactory(workerFactory)
+            .build()
+
+        // Act
+        val result = worker.doWork()
+
+        // Assert
+        assertEquals(ListenableWorker.Result.success(), result)
+        coVerify(exactly = 1) { alarmScheduler.schedule(match { it.medication.name == "Dipirona" }) }
+        coVerify(exactly = 1) { alarmScheduler.schedule(match { it.medication.name == "Ibuprofeno" }) }
     }
 
     @Test
@@ -115,6 +151,7 @@ class AlarmWatchdogWorkerTest {
         // Assert
         assertEquals(ListenableWorker.Result.success(), result)
         coVerify(exactly = 1) { reminderDao.getAllActiveReminders() }
+        coVerify(exactly = 0) { alarmScheduler.schedule(any()) }
     }
 
     @Test
@@ -131,6 +168,7 @@ class AlarmWatchdogWorkerTest {
 
         // Assert
         assertEquals(ListenableWorker.Result.retry(), result)
+        coVerify(exactly = 0) { alarmScheduler.schedule(any()) }
     }
 
     @Test
@@ -142,8 +180,8 @@ class AlarmWatchdogWorkerTest {
                 medicationId = 99L,
                 time = System.currentTimeMillis() + 60000,
                 dosage = "1 comprimido",
-                requestCode = 301,
-                createdAt = System.currentTimeMillis()
+                createdAt = System.currentTimeMillis(),
+                requestCode = 301
             )
         )
         coEvery { reminderDao.getAllActiveReminders() } returns flowOf(mockReminders)
@@ -158,8 +196,64 @@ class AlarmWatchdogWorkerTest {
 
         // Assert
         assertEquals(ListenableWorker.Result.success(), result)
-
-        // Ajustado com o tipo explícito para o compilador resolver a inferência
         coVerify(exactly = 0) { alarmScheduler.schedule(any<MedicationReminder>()) }
+    }
+
+    @Test
+    fun `doWork when mixed valid and orphan reminders exist should skip orphan and schedule valid`() = runBlocking {
+        // Arrange (ordem corrigida: id, medicationId, time, dosage, createdAt, requestCode)
+        val validReminder = ReminderEntity(1L, 10L, System.currentTimeMillis() + 60000, "1 comp", System.currentTimeMillis(), 301)
+        val orphanReminder = ReminderEntity(2L, 99L, System.currentTimeMillis() + 120000, "1 comp", System.currentTimeMillis(), 302)
+
+        coEvery { reminderDao.getAllActiveReminders() } returns flowOf(listOf(validReminder, orphanReminder))
+        coEvery { medicationDao.getMedicationById(10L) } returns MedicationEntity(10L, "Vitamina C")
+        coEvery { medicationDao.getMedicationById(99L) } returns null
+
+        val worker = TestListenableWorkerBuilder<AlarmWatchdogWorker>(context)
+            .setWorkerFactory(workerFactory)
+            .build()
+
+        // Act
+        val result = worker.doWork()
+
+        // Assert
+        assertEquals(ListenableWorker.Result.success(), result)
+        coVerify(exactly = 1) { alarmScheduler.schedule(match { it.medication.name == "Vitamina C" }) }
+    }
+
+    @Test
+    fun `doWork when reminder has multi pill dosage should schedule alarm exactly once`() = runBlocking {
+        // Arrange: O usuário vai tomar 3 comprimidos, mas o alarme deve tocar apenas 1 vez no horário
+        val medicationId = 10L
+        val mockReminder = ReminderEntity(
+            id = 1L,
+            medicationId = medicationId,
+            time = System.currentTimeMillis() + 60000,
+            dosage = "3 comprimidos",
+            createdAt = System.currentTimeMillis(),
+            requestCode = 301
+        )
+
+        val mockMedication = MedicationEntity(
+            id = medicationId,
+            name = "Antibiótico"
+        )
+
+        coEvery { reminderDao.getAllActiveReminders() } returns flowOf(listOf(mockReminder))
+        coEvery { medicationDao.getMedicationById(medicationId) } returns mockMedication
+
+        val worker = TestListenableWorkerBuilder<AlarmWatchdogWorker>(context)
+            .setWorkerFactory(workerFactory)
+            .build()
+
+        // Act
+        val result = worker.doWork()
+
+        // Assert
+        assertEquals(ListenableWorker.Result.success(), result)
+
+        // A garantia de ouro: O agendador NÃO PODE multiplicar os alarmes por causa da dosagem.
+        // Deve ser chamado exatamente 1 única vez.
+        coVerify(exactly = 1) { alarmScheduler.schedule(any<MedicationReminder>()) }
     }
 }

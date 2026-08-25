@@ -129,4 +129,30 @@ class AlarmSchedulerImplTest {
             org.junit.Assert.fail("Cancelamento de alarme inexistente não deveria lançar exceção: ${e.message}")
         }
     }
+
+    @Test
+    fun schedule_whenDosageHasMultiplePills_shouldScheduleOnlyOneAlarmInSystem() {
+        // Arrange: Dosagem complexa indicando múltiplos comprimidos
+        val reminder = MedicationReminder(
+            medication = Medication(id = 1L, name = "Paracetamol"),
+            time = LocalTime.of(8, 0),
+            dosage = "3 comprimidos",
+            createdAt = System.currentTimeMillis(),
+            requestCode = 1002
+        )
+
+        // Act
+        scheduler.schedule(reminder)
+
+        // Assert: Garante que o AlarmManager do Android recebeu EXATAMENTE 1 alarme físico,
+        // independentemente da quantidade descrita na string de dosagem.
+        assertEquals("O AlarmManager deve registrar apenas 1 alarme físico no sistema", 1, shadowAlarmManager.scheduledAlarms.size)
+
+        val nextAlarm = shadowAlarmManager.nextScheduledAlarm
+        assertNotNull(nextAlarm)
+
+        // Valida que o extra da dosagem foi repassado corretamente sem gerar duplicidade
+        val intent = shadowOf(nextAlarm?.operation).savedIntent
+        assertEquals("3 comprimidos", intent.getStringExtra("ALARM_DOSAGE"))
+    }
 }

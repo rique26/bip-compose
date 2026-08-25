@@ -27,6 +27,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -231,5 +232,87 @@ class AlarmReceiverTest {
 
         // Assert: Como a permissão é falsa na API 31+, o alarme NÃO deve ser agendado
         assertEquals(0, shadowAlarmManager.scheduledAlarms.size)
+    }
+
+    @Test
+    fun onReceive_whenAlarmTriggeredMultipleTimesConsecutively_reschedulesWithoutDuplicating() {
+        val baseTime = System.currentTimeMillis() + 10000
+        val intent = Intent(context, AlarmReceiver::class.java).apply {
+            action = "${context.packageName}.ALARM_TRIGGER"
+            putExtra("ALARM_LABEL", "Paracetamol")
+            putExtra("ALARM_DOSAGE", "3 comprimidos")
+            putExtra("ALARM_TIME", baseTime)
+            putExtra("REQUEST_CODE", 301)
+        }
+
+        // 1. Disparo do Dia 1 -> Deve agendar para o Dia 2
+        receiver.onReceive(context, intent)
+
+        var scheduledAlarms = shadowAlarmManager.scheduledAlarms
+        assertEquals("Deveria haver exatamente 1 alarme agendado", 1, scheduledAlarms.size.toLong())
+        val firstRescheduledTime = scheduledAlarms[0].triggerAtTime
+
+        // Pega o intent atualizado que o próprio receptor modificou para o próximo ciclo
+        val nextCycleIntent = shadowAlarmManager.nextScheduledAlarm?.operation?.let {
+            // Extrai o intent do PendingIntent salvo para simular o disparo do dia seguinte
+            shadowOf(it).savedIntent
+        } ?: intent
+
+        // 2. Disparo do Dia 2 -> Deve avançar para o Dia 3
+        receiver.onReceive(context, nextCycleIntent)
+
+        scheduledAlarms = shadowAlarmManager.scheduledAlarms
+        assertEquals("Os alarmes não devem se multiplicar; deve continuar havendo apenas 1", 1, scheduledAlarms.size.toLong())
+
+        val secondRescheduledTime = scheduledAlarms[0].triggerAtTime
+        assertTrue("O tempo do alarme do Dia 3 deve ser posterior ao do Dia 2", secondRescheduledTime > firstRescheduledTime)
+    }
+
+    @Test
+    fun `alarmTriggerSequence across multiple consecutive days reschedules cleanly without duplication`() {
+        // Arrange: Define o número de dias que queremos simular em cadeia (ex: 7 dias seguidos)
+        val totalDaysToSimulate = 7
+
+        var currentIntent = Intent(context, AlarmReceiver::class.java).apply {
+            action = "${context.packageName}.ALARM_TRIGGER"
+            putExtra("ALARM_LABEL", "Paracetamol")
+            putExtra("ALARM_DOSAGE", "3 comprimidos")
+            putExtra("ALARM_TIME", System.currentTimeMillis() + 5000L)
+            putExtra("REQUEST_CODE", 888)
+        }
+
+        var previousTriggerTime = 0L
+
+        // Act & Assert por Indução: Loop simulando a passagem sequencial dos dias
+        for (day in 1..totalDaysToSimulate) {
+            // Dispara o alarme referente ao dia atual da simulação
+            receiver.onReceive(context, currentIntent)
+
+            // 1. Validação de Integridade: O AlarmManager NUNCA pode acumular mais de 1 alarme
+            val scheduledAlarms = shadowAlarmManager.scheduledAlarms
+            assertEquals(
+                "No Dia $day, o sistema deve manter exatamente 1 alarme ativo (sem duplicação ou triplicação)",
+                1,
+                scheduledAlarms.size.toLong()
+            )
+
+            val currentAlarm = scheduledAlarms[0]
+            val currentTriggerTime = currentAlarm.triggerAtTime
+
+            // 2. Validação Temporal: O tempo do alarme atual deve ser sempre maior que o anterior
+            if (day > 1) {
+                assertTrue(
+                    "O tempo do alarme do Dia $day deve ser estritamente posterior ao dia anterior",
+                    currentTriggerTime > previousTriggerTime
+                )
+            }
+
+            previousTriggerTime = currentTriggerTime
+
+            // 3. Captura o Intent programado para o próximo dia para alimentar a próxima iteração do loop
+            val pendingIntent = currentAlarm.operation
+            val shadowPendingIntent = shadowOf(pendingIntent)
+            currentIntent = shadowPendingIntent.savedIntent ?: break
+        }
     }
 }
