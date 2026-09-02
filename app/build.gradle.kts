@@ -121,6 +121,9 @@ android {
         }
     }
 
+    androidResources {
+        noCompress.addAll(listOf("task", "bin", "litertlm"))
+    }
     defaultConfig {
         multiDexEnabled = true
     }
@@ -135,6 +138,11 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+    testOptions {
+        unitTests {
+            isReturnDefaultValues = true
+        }
     }
 }
 
@@ -163,6 +171,7 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.hilt.work)
     implementation(libs.play.services.location)
+    testImplementation(libs.junit.junit)
     ksp(libs.androidx.hilt.compiler)
     ksp(libs.dagger.hilt.compiler)
 
@@ -195,8 +204,7 @@ dependencies {
     // Lottie Animation Compose
     implementation(libs.lottie.compose)
 
-    // MediaPipe LLM Inference
-    implementation(libs.mediapipe.tasks.genai)
+    implementation(libs.mediapipe.genai)
 
     // Desugaring
     coreLibraryDesugaring(libs.desugar.jdk.libs)
