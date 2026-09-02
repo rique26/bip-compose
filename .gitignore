@@ -21,5 +21,4 @@ app/src/main/assets/gemma3-1b-it-int4.task
 /app/src/main/ic_launcher-playstore.png
 /install_all_variants.sh
 /uninstall_all_variants.
-**/google-services.json
 app/release/
