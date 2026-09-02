@@ -24,20 +24,16 @@ class SaveMoodWithAiAnalysisUseCase @Inject constructor(
         return try {
             val analysisResult = intelligenceRepository.analyzeSymptomRisk(moodEntry)
 
-            var enrichedEntry = moodEntry
-
             if (analysisResult is Result.Error) {
+                return analysisResult
+            }
+
+            var enrichedEntry = moodEntry
+            analysisResult.onSuccess { analysis ->
                 enrichedEntry = enrichedEntry.copy(
-                    riskLevel = RiskLevel.ESTAVEL,
-                    aiInstruction = "Humor registrado com sucesso."
+                    riskLevel = analysis.riskLevel,
+                    aiInstruction = analysis.instruction
                 )
-            } else {
-                analysisResult.onSuccess { analysis ->
-                    enrichedEntry = enrichedEntry.copy(
-                        riskLevel = analysis.riskLevel,
-                        aiInstruction = analysis.instruction
-                    )
-                }
             }
 
             moodRepository.saveMood(enrichedEntry)

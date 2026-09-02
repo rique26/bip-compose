@@ -27,7 +27,7 @@ class ClinicalIntelligenceRepositoryTest {
     @Test
     fun analyzeSymptomRisk_whenUserMentionsForgottenMedication_returnsAlertRisk() = runTest {
         // Arrange
-        val moodEntry = MoodEntry(level = 2, notes = "Esqueci meu remédio hoje à tarde")
+        val moodEntry = MoodEntry(level = 2, notes = "Esqueci meu remédio hoje à tarde", dateTime = LocalDateTime.now())
 
         // Act
         val result = repository.analyzeSymptomRisk(moodEntry)
