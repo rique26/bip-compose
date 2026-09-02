@@ -36,6 +36,8 @@ import androidx.compose.ui.unit.sp
 import com.ebody.bip.R
 import com.ebody.bip.features.wellbeing.presentation.mood.MoodUiState
 
+private const val TAG = "BIP_MOOD_DEBUG"
+
 @Composable
 fun MoodSelectorCard(
     state: MoodUiState,

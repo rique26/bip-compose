@@ -7,7 +7,7 @@ data class MoodEntry(
     val id: Long = 0L,
     val level: Int?,
     val notes: String,
-    val dateTime: LocalDateTime,
+    val dateTime: LocalDateTime = LocalDateTime.now(),
     val riskLevel: RiskLevel = RiskLevel.ESTAVEL,
     val aiInstruction: String = ""
 )

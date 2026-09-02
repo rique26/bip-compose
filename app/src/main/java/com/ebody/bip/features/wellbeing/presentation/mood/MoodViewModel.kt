@@ -1,5 +1,6 @@
 package com.ebody.bip.features.wellbeing.presentation.mood
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ebody.bip.core.domain.intelligence.model.RiskLevel
@@ -14,6 +15,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+private const val TAG = "BIP_MOOD_DEBUG"
+
 @HiltViewModel
 class MoodViewModel @Inject constructor(
     private val saveMoodWithAiAnalysisUseCase: SaveMoodWithAiAnalysisUseCase
@@ -24,7 +27,17 @@ class MoodViewModel @Inject constructor(
 
     fun onEvent(event: MoodEvent) {
         when (event) {
-            is MoodEvent.SelectMood -> { _uiState.update { it.copy(selectedMood = event.mood) } }
+            is MoodEvent.SelectMood -> {
+                val moodLabel = when (event.mood) {
+                    1 -> "Mal"
+                    2 -> "Estranho"
+                    3 -> "Bem"
+                    4 -> "Ótimo"
+                    else -> "Desconhecido"
+                }
+                Log.d(TAG, "[ViewModel] Evento SelectMood recebido: Level=${event.mood} ($moodLabel)")
+                _uiState.update { it.copy(selectedMood = event.mood) }
+            }
 
             is MoodEvent.UpdateNotes -> { _uiState.update { it.copy(notes = event.notes) } }
 
