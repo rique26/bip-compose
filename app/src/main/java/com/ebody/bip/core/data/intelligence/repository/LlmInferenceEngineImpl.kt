@@ -1,6 +1,8 @@
 package com.ebody.bip.core.data.intelligence.repository
 
+import android.app.ActivityManager
 import android.content.Context
+import android.os.Build
 import android.util.Log
 import com.ebody.bip.core.domain.intelligence.repository.LlmInferenceEngine
 import com.google.mediapipe.tasks.genai.llminference.LlmInference
@@ -19,15 +21,20 @@ class LlmInferenceEngineImpl @Inject constructor(
     companion object {
         private const val TAG = "BipAI_LlmEngine"
         private const val MODEL_NAME = "gemma3-1b-it-int4.task"
+        private const val MIN_RAM_GB = 2.5
     }
 
     @Volatile
     private var llmInference: LlmInference? = null
-
     @Volatile
     private var isInitializing = false
 
     override suspend fun initialize() = withContext(Dispatchers.IO) {
+
+        if (!isDeviceCompatible()) {
+            Log.w(TAG, "Dispositivo incompatível com IA On-Device (exige 64-bit e RAM >= ${MIN_RAM_GB}GB).")
+            throw UnsupportedOperationException("Hardware incompatível para execução local do modelo Gemma.")
+        }
 
         if (llmInference != null) {
             Log.i(TAG, "LLM já inicializado.")
@@ -43,26 +50,20 @@ class LlmInferenceEngineImpl @Inject constructor(
 
         try {
             Log.i(TAG, "========== INICIANDO LLM ==========")
-
             val start = System.currentTimeMillis()
-
             val modelPath = getModelPath()
-
-            Log.i(TAG, "Criando LlmInferenceOptions...")
 
             val options = LlmInference.LlmInferenceOptions.builder()
                 .setModelPath(modelPath)
                 .build()
 
-            llmInference = LlmInference.createFromOptions(
-                context,
-                options
-            )
+            llmInference = LlmInference.createFromOptions(context, options)
 
             Log.i(TAG, "LLM inicializado em ${System.currentTimeMillis() - start} ms")
 
         } catch (t: Throwable) {
             Log.e(TAG, "Falha ao inicializar LLM", t)
+            throw t
         } finally {
             isInitializing = false
         }
@@ -104,13 +105,9 @@ class LlmInferenceEngineImpl @Inject constructor(
             { "riskLevel": 
             """.trimIndent()
         }
-
         Log.i(TAG, "Gerando resposta...")
-
         val response = engine.generateResponse(prompt)
-
-        Log.i(TAG, "Resposta gerada.")
-
+        Log.i(TAG, "Resposta gerada. $response")
         response
     }
 
@@ -134,5 +131,17 @@ class LlmInferenceEngineImpl @Inject constructor(
         }
 
         return file.absolutePath
+    }
+
+    fun isDeviceCompatible(): Boolean {
+        val supports64Bit = Build.SUPPORTED_64_BIT_ABIS.isNotEmpty()
+        if (!supports64Bit) return false
+
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager ?: return false
+        val memInfo = ActivityManager.MemoryInfo()
+        activityManager.getMemoryInfo(memInfo)
+
+        val totalRamGb = memInfo.totalMem / (1024.0 * 1024.0 * 1024.0)
+        return totalRamGb >= MIN_RAM_GB
     }
 }

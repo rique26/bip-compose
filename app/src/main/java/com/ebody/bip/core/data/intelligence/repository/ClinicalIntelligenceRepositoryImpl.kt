@@ -56,6 +56,7 @@ class ClinicalIntelligenceRepositoryImpl @Inject constructor(
 
             Result.Success(RiskAnalysis(riskLevel = risk, instruction = dto.instruction))
         } catch (e: Exception) {
+            Log.e(TAG, "Falha na análise de risco via Gemma", e)
             Result.Error(e)
         }
     }
@@ -64,8 +65,7 @@ class ClinicalIntelligenceRepositoryImpl @Inject constructor(
         structuredHistory: String,
         filterLabel: String
     ): String {
-        return try {
-            val systemPrompt = """
+        val systemPrompt = """
                 Você é um assistente de inteligência clínica especializado em sumarizar históricos de pacientes.
                 Sua tarefa é ler uma lista de registros de humor e observações de saúde e criar um "RESUMO CLÍNICO DE ACOMPANHAMENTO".
                 
@@ -79,20 +79,16 @@ class ClinicalIntelligenceRepositoryImpl @Inject constructor(
                 Não use saudações, introduções vazias ou blocos normais de JSON. Comece direto no título do resumo.
             """.trimIndent()
 
-            val userPrompt = """
+        val userPrompt = """
                 Filtro aplicado: $filterLabel
                 Histórico bruto extraído do banco de dados local:
                 $structuredHistory
             """.trimIndent()
 
-            Log.i(TAG, "Disparando inferência de resumo clínico local...")
-            val rawResponse = llmEngine.generateResponse(systemPrompt, userPrompt)
+        Log.i(TAG, "Disparando inferência de resumo clínico local...")
+        val rawResponse = llmEngine.generateResponse(systemPrompt, userPrompt)
 
-            cleanSummaryText(rawResponse)
-        } catch (e: Exception) {
-            Log.e(TAG, "Erro ao gerar resumo clínico no repositório", e)
-            "Falha ao gerar o resumo executivo: ${e.localizedMessage}"
-        }
+        return cleanSummaryText(rawResponse)
     }
 
     private fun cleanJsonString(raw: String): String {

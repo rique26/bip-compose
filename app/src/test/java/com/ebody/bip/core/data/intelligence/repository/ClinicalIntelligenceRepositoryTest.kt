@@ -15,37 +15,40 @@ import java.time.LocalDateTime
 
 class ClinicalIntelligenceRepositoryTest {
 
-    private val llmEngine: LlmInferenceEngine = mockk()
+    private lateinit var fakeLlmEngine: FakeLlmInferenceEngineImpl
     private lateinit var repository: ClinicalIntelligenceRepositoryImpl
 
     @Before
-    fun setUp() {
-        repository = ClinicalIntelligenceRepositoryImpl(llmEngine)
+    fun setup() {
+        fakeLlmEngine = FakeLlmInferenceEngineImpl()
+        repository = ClinicalIntelligenceRepositoryImpl(fakeLlmEngine)
     }
 
     @Test
-    fun `deve retornar Success com o risco correto quando a IA responder um JSON valido`() = runTest {
-        // Uma entrada de humor e uma resposta JSON simulando a IA
-        val moodEntry = MoodEntry(level = 1, notes = "Crise de ansiedade forte", dateTime = LocalDateTime.now())
+    fun analyzeSymptomRisk_whenUserMentionsForgottenMedication_returnsAlertRisk() = runTest {
+        // Arrange
+        val moodEntry = MoodEntry(level = 2, notes = "Esqueci meu remédio hoje à tarde")
 
-        val jsonResponseIa = """
-            {
-                "riskLevel": "CRITICO",
-                "instruction": "Procure ajuda especializada imediatamente."
-            }
-        """.trimIndent()
-
-        // Ensaia o motor do Gemma para devolver a String JSON sem processar nada real
-        coEvery { llmEngine.generateResponse(any(), any()) } returns jsonResponseIa
-
-        // Executa a análise
+        // Act
         val result = repository.analyzeSymptomRisk(moodEntry)
 
-        // Valida se o repositório parseou o JSON perfeitamente para os Enums de Domínio
+        // Assert
         assertTrue(result is Result.Success)
         val data = (result as Result.Success).data
+        assertEquals(RiskLevel.ALERTA, data.riskLevel)
+        assertTrue(data.instruction.contains("rotina de medicação"))
+    }
 
-        assertEquals(RiskLevel.CRITICO, data.riskLevel)
-        assertEquals("Procure ajuda especializada imediatamente.", data.instruction)
+    @Test
+    fun generateClinicalSummary_returnsFormattedMarkdownHeader() = runTest {
+        // Act
+        val summary = repository.generateClinicalSummary(
+            structuredHistory = "Histórico fictício",
+            filterLabel = "Últimos 7 dias"
+        )
+
+        // Assert
+        assertTrue(summary.startsWith("📊 RESUMO CLÍNICO DE ACOMPANHAMENTO"))
+        assertTrue(summary.contains("Adesão Medicamentosa:"))
     }
 }
