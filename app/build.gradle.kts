@@ -212,8 +212,11 @@ dependencies {
     // Testes e Debug
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
+    testImplementation(libs.dagger.hilt.android.testing)
+    kspTest(libs.dagger.hilt.compiler)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)
+    testImplementation(libs.turbine)
     testImplementation(libs.androidx.junit)
     testImplementation(libs.androidx.test.core)
 

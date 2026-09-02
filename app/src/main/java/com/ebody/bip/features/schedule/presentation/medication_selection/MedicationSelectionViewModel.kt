@@ -9,54 +9,72 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+
+data class MedicationSelectionUiState(
+    val isLoading: Boolean = false,
+    val medications: List<Medication> = emptyList(),
+    val searchQuery: String = "",
+    val selectedIds: Set<Long> = emptySet(),
+    val errorMessage: String? = null
+)
+
+sealed interface MedicationSelectionEvent {
+    data class SearchQueryChanged(val query: String) : MedicationSelectionEvent
+    data class ToggleMedicationSelection(val id: Long, val isSelected: Boolean) : MedicationSelectionEvent
+    data class LoadMedications(val query: String = "") : MedicationSelectionEvent
+}
 
 @HiltViewModel
 class MedicationSelectionViewModel @Inject constructor(
     private val getMedicationsUseCase: GetMedicationsUseCase
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<MedicationSelectionUiState>(MedicationSelectionUiState.Loading)
+    private val _uiState = MutableStateFlow(MedicationSelectionUiState())
     val uiState: StateFlow<MedicationSelectionUiState> = _uiState.asStateFlow()
 
-    private val _searchQuery = MutableStateFlow("")
-    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
-
-    private val _medications = MutableStateFlow<List<Medication>>(emptyList())
-    val medications: StateFlow<List<Medication>> = _medications.asStateFlow()
-
-    fun onSearchQueryChanged(newQuery: String) {
-        _searchQuery.value = newQuery
-        loadMedications(newQuery)
+    init {
+        loadMedications()
     }
 
-    fun loadMedications(query: String = "") {
-        viewModelScope.launch {
-            _uiState.value = MedicationSelectionUiState.Loading
-            try {
-                val result = getMedicationsUseCase(query)
-                _medications.value = result
-                _uiState.value = MedicationSelectionUiState.Success
-            } catch (e: Exception) {
-                Log.e("MedicationSelection", "Erro ao carregar medicações: ${e.message}", e)
-                _uiState.value = MedicationSelectionUiState.Error(e.message ?: "Erro desconhecido")
+    fun onEvent(event: MedicationSelectionEvent) {
+        when (event) {
+            is MedicationSelectionEvent.SearchQueryChanged -> {
+                _uiState.update { it.copy(searchQuery = event.query) }
+                loadMedications(event.query)
+            }
+            is MedicationSelectionEvent.ToggleMedicationSelection -> {
+                val currentSelected = _uiState.value.selectedIds
+                val newSelected = if (event.isSelected) {
+                    currentSelected + event.id
+                } else {
+                    currentSelected - event.id
+                }
+                _uiState.update { it.copy(selectedIds = newSelected) }
+            }
+            is MedicationSelectionEvent.LoadMedications -> {
+                loadMedications(event.query)
             }
         }
     }
 
-//    fun deleteMedication(medicationId: String) {
-//        viewModelScope.launch {
-//            try {
-//                // TODO: Replace with actual repository call
-//                // medicationRepository.deleteMedication(medicationId)
-//                _medications.value = _medications.value.filter { it.id != medicationId }
-//            } catch (e: Exception) {
-//                _uiState.value =
-//                    MedicationListUiState.Error(e.message ?: "Error deleting medication")
-//            }
-//        }
-//    }
-
-
+    private fun loadMedications(query: String = "") {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            try {
+                val result = getMedicationsUseCase(query)
+                _uiState.update {
+                    it.copy(isLoading = false, medications = result)
+                }
+            } catch (e: Exception) {
+                Log.e("MedicationSelection", "Erro ao carregar medicações: ${e.message}", e)
+                _uiState.update {
+                    it.copy(isLoading = false, errorMessage = e.message ?: "Erro desconhecido")
+                }
+            }
+        }
+    }
 }

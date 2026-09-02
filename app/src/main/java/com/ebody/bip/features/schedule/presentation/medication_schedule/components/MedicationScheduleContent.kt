@@ -32,8 +32,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TimePickerState
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,35 +44,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ebody.bip.features.schedule.domain.model.Medication
-import com.ebody.bip.features.schedule.presentation.medication_schedule.components.DosagePickerDialog
-import com.ebody.bip.features.schedule.presentation.medication_schedule.components.ScheduleTimePickerDialog
+import com.ebody.bip.features.schedule.presentation.medication_schedule.MedicationScheduleEvent
+import com.ebody.bip.features.schedule.presentation.medication_schedule.MedicationScheduleUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MedicationScheduleContent(
-    medications: List<Medication>,
-    dosage: String,
-    scheduleTimes: List<Pair<Int, Int>>,
+    state: MedicationScheduleUiState,
     timePickerState: TimePickerState,
-    showDosageDialog: Boolean,
-    showTimePicker: Boolean,
     onBack: () -> Unit,
-    onSaveClick: () -> Unit,
-    onAddSchedule: () -> Unit,
-    onRemoveSchedule: (Int) -> Unit,
-    onScheduleClick: (Int, Pair<Int, Int>) -> Unit,
-    onDosageClick: () -> Unit,
-    onDismissDosage: () -> Unit,
-    onConfirmDosage: (String) -> Unit,
-    onDismissTime: () -> Unit,
-    onConfirmTime: () -> Unit
+    onEvent: (MedicationScheduleEvent) -> Unit,
+    onFinish: () -> Unit
 ) {
     val dosageInteractionSource = remember { MutableInteractionSource() }
     val isDosagePressed by dosageInteractionSource.collectIsPressedAsState()
 
     LaunchedEffect(isDosagePressed) {
-        if (isDosagePressed) onDosageClick()
+        if (isDosagePressed) onEvent(MedicationScheduleEvent.ToggleDosageDialog(true))
     }
 
     Scaffold(
@@ -112,7 +100,7 @@ fun MedicationScheduleContent(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     OutlinedTextField(
-                        value = dosage,
+                        value = state.dosage,
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("Dosagem / Quantidade") },
@@ -121,7 +109,7 @@ fun MedicationScheduleContent(
                     )
 
                     Text(
-                        text = "Horários (${scheduleTimes.size}/5)",
+                        text = "Horários (${state.scheduleTimes.size}/5)",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -130,7 +118,7 @@ fun MedicationScheduleContent(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        itemsIndexed(scheduleTimes) { index, horario ->
+                        itemsIndexed(state.scheduleTimes) { index, horario ->
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = CardDefaults.cardColors(containerColor = Color.White)
@@ -139,7 +127,7 @@ fun MedicationScheduleContent(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable {
-                                            onScheduleClick(index, horario)
+                                            onEvent(MedicationScheduleEvent.OpenTimePicker(index, horario))
                                         }
                                         .padding(16.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -153,8 +141,8 @@ fun MedicationScheduleContent(
                                         style = MaterialTheme.typography.headlineSmall
                                     )
 
-                                    if (scheduleTimes.size > 1) {
-                                        IconButton(onClick = { onRemoveSchedule(index) }) {
+                                    if (state.scheduleTimes.size > 1) {
+                                        IconButton(onClick = { onEvent(MedicationScheduleEvent.RemoveScheduleTime(index)) }) {
                                             Icon(
                                                 Icons.Default.Close,
                                                 contentDescription = "Remover horário",
@@ -167,9 +155,9 @@ fun MedicationScheduleContent(
                         }
 
                         item {
-                            if (scheduleTimes.size < 5) {
+                            if (state.scheduleTimes.size < 5) {
                                 Button(
-                                    onClick = onAddSchedule,
+                                    onClick = { onEvent(MedicationScheduleEvent.AddScheduleTime()) },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(top = 8.dp),
@@ -185,16 +173,16 @@ fun MedicationScheduleContent(
                 }
 
                 Button(
-                    onClick = onSaveClick,
+                    onClick = { onEvent(MedicationScheduleEvent.SaveReminders(onFinish)) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E84B1)),
-                    enabled = dosage.isNotBlank() && medications.isNotEmpty()
+                    enabled = state.dosage.isNotBlank() && state.medications.isNotEmpty() && !state.isSaving
                 ) {
                     Text(
-                        "SALVAR PARA ${medications.size} MEDICAMENTOS",
+                        "SALVAR PARA ${state.medications.size} MEDICAMENTOS",
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
@@ -202,18 +190,22 @@ fun MedicationScheduleContent(
                 }
             }
 
-            if (showDosageDialog) {
+            if (state.showDosageDialog) {
                 DosagePickerDialog(
-                    onDismiss = onDismissDosage,
-                    onConfirm = onConfirmDosage
+                    onDismiss = { onEvent(MedicationScheduleEvent.ToggleDosageDialog(false)) },
+                    onConfirm = { selectedDosage ->
+                        onEvent(MedicationScheduleEvent.UpdateDosage(selectedDosage))
+                    }
                 )
             }
 
-            if (showTimePicker) {
+            if (state.showTimePicker) {
                 ScheduleTimePickerDialog(
                     timePickerState = timePickerState,
-                    onDismiss = onDismissTime,
-                    onConfirm = onConfirmTime
+                    onDismiss = { onEvent(MedicationScheduleEvent.ToggleTimePicker(false)) },
+                    onConfirm = {
+                        onEvent(MedicationScheduleEvent.ConfirmTimePicker(timePickerState.hour, timePickerState.minute))
+                    }
                 )
             }
         }
